@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard - EduEveryone{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Welcome -->
+<div class="hero-gradient mb-4 fade-in-up" style="position:relative;z-index:1;">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-white mb-1">Welcome back, {{ user.first_name|default:user.username }}!</h2>
+            <p class="text-white opacity-75 mb-3">Track your IELTS progress and keep improving.</p>
+        </div>
+        <div class="col-md-4 text-end d-none d-md-block">
+            <div style="font-size: 5rem; opacity: 0.15;"><i class="fas fa-graduation-cap"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Overview -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4 fade-in-up">
+        <div class="action-card" style="border-left: 3px solid var(--accent);">
+            <div class="action-icon" style="background: var(--accent-glow); color: var(--accent-light);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h6 class="fw-bold">My Progress</h6>
+            <p class="small text-muted mb-0">{{ recent_results|length }} exam{{ recent_results|length|pluralize }} completed</p>
+        </div>
+    </div>
+
+    <div class="col-md-4 fade-in-up">
+        <div class="action-card" style="border-left: 3px solid var(--success);">
+            <div class="action-icon" style="background: rgba(16,185,129,0.12); color: #10b981;">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h6 class="fw-bold">Best Band</h6>
+            <p class="small text-muted mb-0">
+                {% if best_band %}
+                Band {{ best_band }}
+                {% else %}
+                No scores yet
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-4 fade-in-up">
+        <div class="action-card" style="border-left: 3px solid var(--warning);">
+            <div class="action-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <h6 class="fw-bold">Target</h6>
+            <p class="small text-muted mb-0">
+                {% if user.target_band_score %}
+                Band {{ user.target_band_score }}
+                {% else %}
+                Not set &mdash; <a href="{% url 'accounts:profile' %}" style="color:var(--accent-light)">set target</a>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Chart + Recent Scores -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8 fade-in-up">
+        <div class="card stat-card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="mb-0"><i class="fas fa-chart-line me-2" style="color:var(--accent-light)"></i>Band Score Trend</h6>
+                <span class="badge bg-light small">All attempts</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 fade-in-up">
+        <div class="card stat-card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="mb-0"><i class="fas fa-history me-2" style="color:var(--accent-light)"></i>Recent Scores</h6>
+                {% if recent_results %}
+                <a href="{% url 'results:list' %}" class="small" style="color:var(--accent-light);text-decoration:none;">All <i class="fas fa-arrow-right ms-1"></i></a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if recent_results %}
+                {% for result in recent_results %}
+                <a href="{% url 'results:detail' result.attempt_id %}"
+                   class="d-flex justify-content-between align-items-center px-3 py-3 text-decoration-none border-bottom"
+                   style="border-color: var(--border-color) !important; color: var(--text-primary);"
+                   onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">
+                    <div>
+                        <div class="fw-600 small">{{ result.attempt.exam_set.title }}</div>
+                        <small style="color:var(--text-muted)">{{ result.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <span class="badge bg-primary rounded-pill px-3 py-2">{{ result.overall_band|default:"--" }}</span>
+                </a>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-pie fa-2x mb-2" style="color:var(--text-muted)"></i>
+                    <p class="small text-muted mb-0">No exams taken yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('trendChart');
+    if (!ctx) return;
+
+    const labels = {{ chart_labels|safe }};
+    if (labels.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-5"><i class="fas fa-chart-area fa-3x mb-3" style="color:var(--text-muted);opacity:0.3"></i><p class="text-muted">Take exams to see your progress chart.</p></div>';
+        return;
+    }
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Overall',
+                    data: {{ chart_overall|safe }},
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#6366f1',
+                    borderWidth: 2,
+                },
+                {
+                    label: 'Listening',
+                    data: {{ chart_listening|safe }},
+                    borderColor: '#10b981',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    pointRadius: 3,
+                    borderWidth: 1.5,
+                },
+                {
+                    label: 'Reading',
+                    data: {{ chart_reading|safe }},
+                    borderColor: '#ef4444',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    pointRadius: 3,
+                    borderWidth: 1.5,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94a3b8', usePointStyle: true, pointStyle: 'circle', padding: 20 }
+                }
+            },
+            scales: {
+                y: {
+                    min: 0, max: 9,
+                    ticks: { stepSize: 1, color: '#64748b' },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                x: {
+                    ticks: { color: '#64748b' },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

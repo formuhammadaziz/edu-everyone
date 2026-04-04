@@ -1,0 +1,507 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listening Practice - EduEveryone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-surface: #111827;
+            --bg-card: #1a1f35;
+            --bg-input: #151a2e;
+            --border-color: rgba(255,255,255,0.06);
+            --border-glow: rgba(99,102,241,0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99,102,241,0.15);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary); color: var(--text-primary);
+            margin: 0; -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== START OVERLAY ===== */
+        .start-overlay {
+            position: fixed; inset: 0; background: var(--bg-primary); z-index: 5000;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .start-card { max-width: 640px; width: 100%; text-align: center; }
+        .start-card h1 {
+            font-size: 2rem; font-weight: 800;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+        .start-card .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; }
+        .info-row { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .info-tag {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 0.75rem 1.25rem; font-size: 0.85rem; color: var(--text-muted); font-weight: 600;
+        }
+        .info-tag span { display: block; font-size: 1.15rem; color: var(--text-primary); margin-top: 2px; font-weight: 700; }
+        .instructions-box {
+            text-align: left; background: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+        }
+        .instructions-box h2 { font-size: 1.1rem; color: var(--accent-light); margin-bottom: 1rem; }
+        .instructions-box ul { list-style: none; padding: 0; }
+        .instructions-box li { font-size: 0.9rem; color: var(--text-secondary); padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); }
+        .instructions-box li:last-child { border: none; }
+        .start-btn {
+            background: var(--gradient-primary); color: white; border: none; padding: 0.85rem 3rem;
+            font-size: 1.1rem; font-weight: 700; border-radius: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .start-btn:hover { box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+
+        /* ===== NAVBAR ===== */
+        .exam-navbar {
+            background: rgba(8,12,24,0.9); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color); padding: 0.5rem 1.25rem;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center; height: 56px;
+        }
+        .exam-nav-brand {
+            font-weight: 700; font-size: 1.1rem;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .exam-section-badge {
+            background: var(--accent-glow); color: var(--accent-light);
+            padding: 0.3rem 0.85rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+        }
+        .timer-badge {
+            background: var(--gradient-success); color: white; padding: 0.35rem 1rem;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums;
+        }
+        .timer-badge.warning { background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #000 !important; }
+        .timer-badge.danger { background: linear-gradient(135deg, #ef4444, #dc2626) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.8} }
+        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .back-link:hover { color: var(--accent-light); }
+
+        /* ===== MAIN ===== */
+        .main-container { margin-top: 56px; display: flex; justify-content: center; background: var(--bg-primary); padding-bottom: 100px; }
+        .left-panel { width: 100%; max-width: 900px; padding: 2rem 1.25rem; }
+
+        .instruction {
+            background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 1.25rem; margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;
+        }
+        .instruction strong { color: var(--accent-light); }
+
+        .question { margin-bottom: 1.5rem; }
+        .question p { margin-bottom: 0.6rem; }
+
+        .notes-box {
+            background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.75rem;
+        }
+        .part-title {
+            font-size: 1.2rem; font-weight: 700; color: var(--accent-light); text-align: center; margin-bottom: 1.25rem;
+        }
+        .notes-box ul { padding-left: 1.25rem; }
+        .notes-box li { margin-bottom: 0.6rem; color: var(--text-secondary); }
+
+        .answer-input {
+            background: var(--bg-input); border: 1px solid var(--border-color); color: var(--accent-light);
+            border-radius: 8px; padding: 4px 10px; font-size: 1rem; text-align: center;
+            font-weight: 600; transition: all 0.2s;
+        }
+        .answer-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
+        .answer-input::placeholder { color: var(--text-muted); font-weight: 400; }
+        .answer-input.correct { border-color: var(--success); background: rgba(16,185,129,0.1); color: var(--success); }
+        .answer-input.incorrect { border-color: var(--danger); background: rgba(239,68,68,0.1); color: var(--danger); }
+
+        .mcq-label {
+            display: flex; align-items: center; padding: 0.5rem 0.75rem; border: 1px solid transparent;
+            border-radius: 8px; cursor: pointer; transition: background 0.15s; color: var(--text-secondary);
+        }
+        .mcq-label:hover { background: var(--accent-glow); }
+        .mcq-label input[type="radio"] { margin-right: 12px; transform: scale(1.3); accent-color: var(--accent); }
+        .mcq-label.correct-radio { background: rgba(16,185,129,0.12); border-color: var(--success); color: var(--success); }
+        .mcq-label.incorrect-radio { background: rgba(239,68,68,0.1); border-color: var(--danger); color: var(--danger); }
+
+        .correct-answer-display { font-weight: 600; color: var(--success); margin-left: 10px; font-size: 0.85rem; }
+        .correct-answer-highlight { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; padding: 2px 6px; }
+
+        .highlight { background-color: rgba(245,158,11,0.3); border-radius: 2px; }
+        .hidden { display: none !important; }
+
+        @keyframes flash { 0%{background:var(--accent-glow)} 100%{background:transparent} }
+        .question.flash { animation: flash 0.8s ease-out; border-radius: 8px; padding: 10px; }
+
+        /* ===== BOTTOM NAV ===== */
+        .nav-arrows { position: fixed; bottom: 80px; right: 20px; display: flex; gap: 4px; z-index: 101; }
+        .nav-arrow {
+            width: 40px; height: 40px; background: var(--bg-card); color: var(--text-secondary);
+            border: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center;
+            justify-content: center; border-radius: 8px; transition: all 0.2s;
+        }
+        .nav-arrow:hover { background: var(--accent-glow); color: var(--accent-light); }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .nav-row {
+            position: fixed; bottom: 0; left: 0; right: 0; background: rgba(8,12,24,0.95);
+            backdrop-filter: blur(20px); border-top: 1px solid var(--border-color);
+            padding: 0 1rem; display: flex; align-items: center; height: 64px; z-index: 100; overflow-x: auto;
+        }
+        .part-nav-wrapper { display: flex; align-items: center; margin-right: 1rem; }
+        .part-nav-btn {
+            background: none; border: none; padding: 0.5rem 0.85rem; font-size: 0.85rem;
+            font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap;
+        }
+        .part-nav-wrapper.selected .part-nav-btn { color: var(--accent-light); }
+        .attempted-count { font-size: 0.75rem; color: var(--text-muted); margin-left: 4px; }
+        .part-nav-wrapper.selected .attempted-count { display: none; }
+        .sub-nav { display: none; gap: 3px; margin-left: 0.5rem; }
+        .part-nav-wrapper.selected .sub-nav { display: flex; }
+
+        .q-btn {
+            width: 30px; height: 30px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+            color: var(--text-muted); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; border-radius: 6px;
+        }
+        .q-btn:hover { background: var(--accent-glow); color: var(--accent-light); }
+        .q-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .q-btn.answered { background: rgba(16,185,129,0.15); color: var(--success); border-color: rgba(16,185,129,0.3); }
+        .q-btn.correct { background: var(--success); color: white; border-color: var(--success); }
+        .q-btn.incorrect { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .check-btn {
+            margin-left: auto; background: var(--gradient-primary); color: white; border: none;
+            padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 8px; position: sticky; right: 0;
+        }
+        .check-btn:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
+        .check-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-box {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 2rem; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; }
+        .modal-header h2 { color: var(--accent-light); font-size: 1.2rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        #result-details table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        #result-details th, #result-details td { border: 1px solid var(--border-color); padding: 0.6rem; }
+        #result-details th { background: var(--bg-surface); color: var(--text-secondary); }
+        #result-details td { color: var(--text-secondary); }
+        .result-correct { color: var(--success) !important; font-weight: 600; }
+        .result-incorrect { color: var(--danger) !important; font-weight: 600; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="start-overlay">
+        <div class="start-card">
+            <h1><i class="fas fa-headphones me-2"></i>IELTS Listening Practice</h1>
+            <p class="subtitle">CDI Full Test &mdash; Ruddick</p>
+            <div class="info-row">
+                <div class="info-tag"><i class="fas fa-clock me-1"></i> Duration<span>40 minutes</span></div>
+                <div class="info-tag"><i class="fas fa-list-ol me-1"></i> Questions<span>40</span></div>
+                <div class="info-tag"><i class="fas fa-layer-group me-1"></i> Parts<span>4</span></div>
+            </div>
+            <div class="instructions-box">
+                <h2><i class="fas fa-info-circle me-2"></i>Instructions</h2>
+                <ul>
+                    <li>You will answer 40 questions across 4 parts.</li>
+                    <li>Write your answers carefully. Pay attention to word limits.</li>
+                    <li>The timer starts when you press <strong>Start Test</strong>.</li>
+                    <li>Spelling must be correct. Answers are not case-sensitive.</li>
+                    <li>Click <strong>Check Answers</strong> when finished to see your score.</li>
+                </ul>
+            </div>
+            <button class="start-btn" id="start-test-btn"><i class="fas fa-play me-2"></i>Start Test</button>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="exam-navbar">
+        <div class="d-flex align-items-center gap-3">
+            <span class="exam-nav-brand"><i class="fas fa-graduation-cap me-2"></i>EduEveryone</span>
+            <span class="exam-section-badge"><i class="fas fa-headphones me-1"></i>Listening</span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="timer-badge" id="timer-badge"><i class="fas fa-clock me-1"></i><span id="timer-display">40:00</span></div>
+            <a href="{% url 'exams:list' %}" class="back-link"><i class="fas fa-arrow-left me-1"></i>Back</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <!-- Part 1 -->
+            <div id="part-1" class="question-part">
+                <div class="instruction"><p><strong>Part 1: Questions 1 - 10</strong></p><p>Complete the notes below. Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.</p></div>
+                <div class="question notes-box">
+                    <div class="part-title">Customer complaint form: product return</div>
+                    <p><strong>Type of product:</strong> vacuum cleaner</p><br>
+                    <p><strong style="color:var(--accent-light)">Customer details</strong></p>
+                    <p>Name: Diane <input type="text" class="answer-input" id="q1" placeholder="1" style="width:180px"></p>
+                    <p>Street address: 34. <input type="text" class="answer-input" id="q2" placeholder="2" style="width:180px"></p>
+                    <p>City: Hamilton</p>
+                    <p>Telephone: 970 7520 (her <input type="text" class="answer-input" id="q3" placeholder="3" style="width:120px"> number)</p>
+                    <br><p><strong style="color:var(--accent-light)">Product details</strong></p>
+                    <p>Date of purchase: on <input type="text" class="answer-input" id="q4" placeholder="4" style="width:150px"></p>
+                    <p>Make and model: Volta Budget</p><p>Power: 2000 watts</p><p>Color: red</p>
+                    <p>Purchase price: $ <input type="text" class="answer-input" id="q5" placeholder="5" style="width:80px"> (in the sale)</p>
+                    <br><p><strong style="color:var(--accent-light)">Fault details</strong></p>
+                    <p>Problem with: the <input type="text" class="answer-input" id="q6" placeholder="6" style="width:150px"></p>
+                    <p>First solution: free <input type="text" class="answer-input" id="q7" placeholder="7" style="width:150px"> (not accepted by customer)</p>
+                    <p>Action requested: exchange</p>
+                    <br><p><strong style="color:var(--accent-light)">Customer requirements</strong></p>
+                    <p>Special features needed: a reusable <input type="text" class="answer-input" id="q8" placeholder="8" style="width:150px"></p>
+                    <p>Price quoted: $ <input type="text" class="answer-input" id="q9" placeholder="9" style="width:80px"></p>
+                    <p>Preferred colour: <input type="text" class="answer-input" id="q10" placeholder="10" style="width:150px"></p>
+                </div>
+            </div>
+
+            <!-- Part 2 -->
+            <div id="part-2" class="question-part hidden">
+                <div class="instruction"><p><strong>Part 2: Questions 11 - 20</strong></p></div>
+                <div class="question" id="q11-c"><p><strong>11</strong> Darren now finds the Latin name for the red squirrel</p><ul><li><label class="mcq-label"><input type="radio" name="q11" value="A"> A extremely suitable for this species.</label></li><li><label class="mcq-label"><input type="radio" name="q11" value="B"> B surprisingly meaningless.</label></li><li><label class="mcq-label"><input type="radio" name="q11" value="C"> C an amusing description of the animal.</label></li></ul></div>
+                <div class="question" id="q12-c"><p><strong>12</strong> Which restriction did Darren set himself for this project?</p><ul><li><label class="mcq-label"><input type="radio" name="q12" value="A"> A to focus exclusively on one species of animal.</label></li><li><label class="mcq-label"><input type="radio" name="q12" value="B"> B to use only one kind of camera.</label></li><li><label class="mcq-label"><input type="radio" name="q12" value="C"> C to take all the photos in one location.</label></li></ul></div>
+                <div class="question" id="q13-c"><p><strong>13</strong> Darren thinks the red squirrel&rsquo;s decline was caused by</p><ul><li><label class="mcq-label"><input type="radio" name="q13" value="A"> A the arrival of another species.</label></li><li><label class="mcq-label"><input type="radio" name="q13" value="B"> B the introduction of disease.</label></li><li><label class="mcq-label"><input type="radio" name="q13" value="C"> C a reduction in their food supply.</label></li></ul></div>
+                <div class="question" id="q14-c"><p><strong>14</strong> Darren knew when red squirrels rather than mice had taken the bait because of</p><ul><li><label class="mcq-label"><input type="radio" name="q14" value="A"> A the type of food consumed.</label></li><li><label class="mcq-label"><input type="radio" name="q14" value="B"> B how the food was eaten.</label></li><li><label class="mcq-label"><input type="radio" name="q14" value="C"> C how much food remained.</label></li></ul></div>
+                <div class="question" id="q15-c"><p><strong>15</strong> Darren was confident about the quality of his photographs because</p><ul><li><label class="mcq-label"><input type="radio" name="q15" value="A"> A he had spent a lot of time practising.</label></li><li><label class="mcq-label"><input type="radio" name="q15" value="B"> B his teacher had prepared him well.</label></li><li><label class="mcq-label"><input type="radio" name="q15" value="C"> C his equipment was of high quality.</label></li></ul></div>
+                <div class="instruction" style="margin-top:2rem"><p><strong>Questions 16 - 20</strong></p><p>Complete the notes below. Write <strong>NO MORE THAN TWO WORDS</strong> for each answer.</p></div>
+                <div class="question notes-box">
+                    <p><strong style="color:var(--accent-light)">What Darren did with his photographs</strong></p>
+                    <ul><li>&bull; exhibited them in a <input type="text" class="answer-input" id="q16" placeholder="16" style="width:200px"></li><li>&bull; submitted them for a competition in a <input type="text" class="answer-input" id="q17" placeholder="17" style="width:250px"></li></ul>
+                    <br><p><strong style="color:var(--accent-light)">Darren&rsquo;s advice for beginner nature photographers</strong></p>
+                    <ul><li>&bull; Your most important piece of equipment is a tripod.</li><li>&bull; Include a so-called <input type="text" class="answer-input" id="q18" placeholder="18" style="width:200px"> to give a sense of scale.</li><li>&bull; Check you are taking your shot from the best position.</li><li>&bull; The quality of light is best late in the <input type="text" class="answer-input" id="q19" placeholder="19" style="width:150px"></li><li>&bull; You should make <input type="text" class="answer-input" id="q20" placeholder="20" style="width:200px"> for each photo.</li></ul>
+                </div>
+            </div>
+
+            <!-- Part 3 -->
+            <div id="part-3" class="question-part hidden">
+                <div class="instruction"><p><strong>Part 3: Questions 21 - 30</strong></p><p><strong>Questions 21 - 27:</strong> Complete the notes below. Write <strong>NO MORE THAN THREE WORDS AND/OR A NUMBER</strong>.</p></div>
+                <div class="question notes-box">
+                    <div class="part-title">Whale Survey</div>
+                    <p><strong style="color:var(--accent-light)">General information</strong></p>
+                    <ul>
+                        <li>&bull; Date</li>
+                        <li>&bull; <input type="text" class="answer-input" id="q21" placeholder="21" style="width:200px"></li>
+                        <li>&bull; State of sea, e.g. <input type="text" class="answer-input" id="q22" placeholder="22" style="width:150px">, choppy etc.</li>
+                        <li>&bull; State of <input type="text" class="answer-input" id="q23" placeholder="23" style="width:150px"></li>
+                        <li>&bull; Visibility (estimate to nearest <input type="text" class="answer-input" id="q24" placeholder="24" style="width:80px"> metres)</li>
+                        <li>&bull; Presence of <input type="text" class="answer-input" id="q25" placeholder="25" style="width:200px"></li>
+                    </ul>
+                    <br><p><strong style="color:var(--accent-light)">Details of whale sightings</strong></p>
+                    <ul>
+                        <li>&bull; Location</li>
+                        <li>&bull; Description<ul style="margin-left:1.25rem;margin-top:0.3rem"><li>&ndash; appearance</li><li>&ndash; <input type="text" class="answer-input" id="q26" placeholder="26" style="width:150px"></li></ul></li>
+                        <li>&bull; Group <input type="text" class="answer-input" id="q27" placeholder="27" style="width:150px"></li>
+                        <li>&bull; Presence of juveniles</li>
+                    </ul>
+                </div>
+                <div class="instruction" style="margin-top:2rem"><p><strong>Questions 28 - 30</strong></p><p>Label the diagram. Write the correct letter, <strong>A&ndash;D</strong>.</p></div>
+                <div class="question notes-box" style="text-align:center">
+                    <div style="margin-bottom:1.25rem"><img src="https://i.ibb.co/cGWmg9G/Day-2-Part-3-4.jpg" alt="Whale Diagram" style="max-width:100%;border-radius:12px;border:1px solid var(--border-color)"></div>
+                    <div style="display:inline-block;text-align:left;font-size:1.1rem">
+                        <p><strong>28</strong> Sperm Whale <input type="text" class="answer-input" id="q28" placeholder="28" style="width:55px" maxlength="1"></p>
+                        <p><strong>29</strong> Northern Right Whale <input type="text" class="answer-input" id="q29" placeholder="29" style="width:55px" maxlength="1"></p>
+                        <p><strong>30</strong> Minke Whale <input type="text" class="answer-input" id="q30" placeholder="30" style="width:55px" maxlength="1"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Part 4 -->
+            <div id="part-4" class="question-part hidden">
+                <div class="instruction"><p><strong>Part 4: Questions 31 - 40</strong></p><p>Complete the notes below. Write <strong>ONE WORD ONLY</strong> for each answer.</p></div>
+                <div class="question notes-box">
+                    <div class="part-title">The development of the telescope</div>
+                    <p><strong style="color:var(--accent-light)">Roger Bacon (1200s)</strong></p>
+                    <ul><li>&bull; His invention assisted <input type="text" class="answer-input" id="q31" placeholder="31" style="width:180px"> with sight problems when they were reading</li></ul>
+                    <br><p><strong style="color:var(--accent-light)">Lipperhey</strong></p>
+                    <ul><li>&bull; 1608: he put concave and convex lenses together to create the telescope</li><li>&bull; The small telescope was first used in the <input type="text" class="answer-input" id="q32" placeholder="32" style="width:150px"></li></ul>
+                    <br><p><strong style="color:var(--accent-light)">Galileo</strong></p>
+                    <ul><li>&bull; 1609: he tried out different lenses to improve the telescope</li><li>&bull; He started <input type="text" class="answer-input" id="q33" placeholder="33" style="width:180px"> of the lenses he needed</li><li>&bull; The Venetian government hoped to use this instrument for the <input type="text" class="answer-input" id="q34" placeholder="34" style="width:150px"></li></ul>
+                    <br><p><strong style="color:var(--accent-light)">Galileo's astronomical discoveries</strong></p>
+                    <ul>
+                        <li>&bull; The Moon<ul style="margin-left:1.25rem"><li>- he discovered its surface was mountainous</li><li>- he worked out the height of the mountains by identifying spots that were <input type="text" class="answer-input" id="q35" placeholder="35" style="width:150px"></li><li>- he created <input type="text" class="answer-input" id="q36" placeholder="36" style="width:150px"> of the moon's surface</li></ul></li>
+                        <li>&bull; Jupiter<ul style="margin-left:1.25rem"><li>- he realized that the bodies orbiting Jupiter were not <input type="text" class="answer-input" id="q37" placeholder="37" style="width:150px"> but moons.</li></ul></li>
+                    </ul>
+                    <br><p><strong style="color:var(--accent-light)">Further development</strong></p>
+                    <ul>
+                        <li>&bull; Scientists discovered that increasing the telescope&rsquo;s <input type="text" class="answer-input" id="q38" placeholder="38" style="width:150px"> improved its power.</li>
+                        <li>&bull; 1670: Hevelius built a telescope 43 meters long.<ul style="margin-left:1.25rem"><li>- poor results: the telescope would move with the <input type="text" class="answer-input" id="q39" placeholder="39" style="width:150px"></li><li>- the problem was solved by attaching it to a <input type="text" class="answer-input" id="q40" placeholder="40" style="width:150px"></li></ul></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="nav-arrows">
+        <button class="nav-arrow" onclick="previousQuestion()" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+        <button class="nav-arrow" onclick="nextQuestion()" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <nav class="nav-row">
+        <div class="part-nav-wrapper" id="pnav-1"><button class="part-nav-btn" onclick="switchToPart(1)">Part 1 <span class="attempted-count" id="ac-1">0/10</span></button><div class="sub-nav" id="sn-1"></div></div>
+        <div class="part-nav-wrapper" id="pnav-2"><button class="part-nav-btn" onclick="switchToPart(2)">Part 2 <span class="attempted-count" id="ac-2">0/10</span></button><div class="sub-nav" id="sn-2"></div></div>
+        <div class="part-nav-wrapper" id="pnav-3"><button class="part-nav-btn" onclick="switchToPart(3)">Part 3 <span class="attempted-count" id="ac-3">0/10</span></button><div class="sub-nav" id="sn-3"></div></div>
+        <div class="part-nav-wrapper" id="pnav-4"><button class="part-nav-btn" onclick="switchToPart(4)">Part 4 <span class="attempted-count" id="ac-4">0/10</span></button><div class="sub-nav" id="sn-4"></div></div>
+        <button class="check-btn" id="deliver-button"><i class="fas fa-check-circle"></i> Check Answers</button>
+    </nav>
+
+    <!-- Results Modal -->
+    <div id="result-modal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <div class="modal-header"><h2><i class="fas fa-chart-bar me-2"></i>Your Results</h2><button class="modal-close" id="modal-close">&times;</button></div>
+            <p id="score-summary" style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;text-align:center;color:var(--text-primary)"></p>
+            <div id="result-details"></div>
+        </div>
+    </div>
+
+    <script>
+    let currentPart = 1, currentQuestion = 1, timeInSeconds = 2400, timerInterval;
+
+    const correctAnswers = {
+        'q1':'RUDDICK','q2':'Garden Avenue','q3':'home',
+        'q4':['31st of July','July 31st','31 July','July 31','31st July'],
+        'q5':'104','q6':'handle','q7':'repair','q8':'dust bag','q9':'180','q10':'silver',
+        'q11':'A','q12':'C','q13':'C','q14':'B','q15':'B',
+        'q16':'local museum','q17':'national newspaper','q18':'secondary object','q19':'afternoon','q20':'detailed notes',
+        'q21':'watch times','q22':'calm','q23':'weather','q24':'100','q25':'fishing boats',
+        'q26':'behavior','q27':'size','q28':'B','q29':'C','q30':'A',
+        'q31':'researchers','q32':['theatre','theater'],'q33':'production','q34':'army',
+        'q35':'bright','q36':'charts','q37':'stars','q38':'length','q39':'wind','q40':'building'
+    };
+
+    // Build nav
+    for (let p=1;p<=4;p++){const c=document.getElementById(`sn-${p}`);const s=(p-1)*10+1;for(let i=s;i<=s+9;i++){const b=document.createElement('button');b.className='q-btn';b.textContent=i;b.onclick=()=>goToQuestion(i);c.appendChild(b);}}
+
+    function getBtn(q){const p=Math.ceil(q/10),i=q-(p-1)*10;return document.querySelector(`#sn-${p} .q-btn:nth-child(${i})`);}
+
+    function updateIndicators(){
+        for(let p=1;p<=4;p++){let c=0,s=(p-1)*10+1;
+            for(let i=s;i<=s+9;i++){const b=getBtn(i);if(!b||b.classList.contains('correct')||b.classList.contains('incorrect')){const t=document.getElementById(`q${i}`),r=document.querySelectorAll(`input[name="q${i}"]:checked`);if((t&&t.value.trim())||r.length>0)c++;continue;}
+                const t=document.getElementById(`q${i}`),r=document.querySelectorAll(`input[name="q${i}"]:checked`);
+                if((t&&t.value.trim())||r.length>0){b.classList.add('answered');c++;}else b.classList.remove('answered');
+            }document.getElementById(`ac-${p}`).textContent=`${c}/10`;
+        }
+    }
+    document.body.addEventListener('input',updateIndicators);
+    document.body.addEventListener('change',updateIndicators);
+
+    function switchToPart(p){
+        if(currentPart!==p)currentQuestion=(p-1)*10+1;
+        currentPart=p;
+        document.querySelectorAll('.question-part').forEach(e=>e.classList.add('hidden'));
+        document.getElementById(`part-${p}`)?.classList.remove('hidden');
+        document.querySelectorAll('.part-nav-wrapper').forEach((w,i)=>{if(i===p-1)w.classList.add('selected');else w.classList.remove('selected');});
+        document.getElementById('prevBtn').disabled=currentQuestion===1;
+        document.getElementById('nextBtn').disabled=currentQuestion===40;
+        updateIndicators();
+    }
+
+    function goToQuestion(q){
+        currentQuestion=q;const tp=Math.ceil(q/10);
+        if(currentPart!==tp)switchToPart(tp);
+        document.querySelectorAll('.q-btn').forEach(b=>b.classList.remove('active'));
+        const btn=getBtn(q);if(btn)btn.classList.add('active');
+        let el=document.getElementById(`q${q}`)||document.getElementById(`q${q}-c`);
+        if(el){const c=el.closest('.question')||el;c.scrollIntoView({behavior:'smooth',block:'center'});c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),800);}
+        document.getElementById('prevBtn').disabled=q===1;document.getElementById('nextBtn').disabled=q===40;
+    }
+
+    function nextQuestion(){if(currentQuestion<40)goToQuestion(currentQuestion+1);}
+    function previousQuestion(){if(currentQuestion>1)goToQuestion(currentQuestion-1);}
+
+    const timerEl=document.getElementById('timer-display'),timerBadge=document.getElementById('timer-badge');
+    function startTimer(){
+        if(timerInterval)return;
+        timerInterval=setInterval(()=>{
+            if(timeInSeconds>0)timeInSeconds--;
+            const m=Math.floor(timeInSeconds/60),s=timeInSeconds%60;
+            timerEl.textContent=`${m}:${s<10?'0':''}${s}`;
+            timerBadge.classList.toggle('warning',timeInSeconds<=300&&timeInSeconds>60);
+            timerBadge.classList.toggle('danger',timeInSeconds<=60);
+            if(timeInSeconds<=0){clearInterval(timerInterval);timerEl.textContent="Time's up!";checkAnswers();}
+        },1000);
+    }
+
+    function checkAnswers(){
+        let score=0,results=[];
+        for(let i=1;i<=40;i++){
+            let key=`q${i}`,correct=correctAnswers[key],uAns='',ok=false;
+            const txt=document.getElementById(key),radio=document.querySelector(`input[name="${key}"]:checked`);
+            if(txt){uAns=txt.value.trim();const l=uAns.toLowerCase();if(Array.isArray(correct))ok=correct.some(a=>a.toLowerCase()===l);else ok=l===String(correct).toLowerCase();txt.classList.add(ok?'correct':'incorrect');if(!ok){const s=document.createElement('span');s.className='correct-answer-display';s.innerHTML=` &rarr; ${Array.isArray(correct)?correct[0]:correct}`;txt.after(s);}}
+            else if(radio){uAns=radio.value;ok=uAns===correct;radio.closest('.mcq-label').classList.add(ok?'correct-radio':'incorrect-radio');if(!ok){const cr=document.querySelector(`input[name="${key}"][value="${correct}"]`);if(cr)cr.closest('.mcq-label').classList.add('correct-radio');}}
+            if(ok)score++;
+            const btn=getBtn(i);if(btn){btn.classList.remove('answered');btn.classList.add(ok?'correct':'incorrect');}
+            results.push({q:i,u:uAns||'--',c:Array.isArray(correct)?correct.join(' / '):correct,ok});
+        }
+        const db=document.getElementById('deliver-button');db.innerHTML=`<i class="fas fa-chart-bar me-1"></i>Score: ${score}/40`;db.disabled=true;
+        document.querySelectorAll('input').forEach(i=>i.disabled=true);
+        document.getElementById('score-summary').innerHTML=`You scored <span style="color:var(--accent-light)">${score}</span> out of 40`;
+        let html='<table><tr><th>Q</th><th>Your Answer</th><th>Correct</th><th>Result</th></tr>';
+        results.forEach(r=>{html+=`<tr><td style="text-align:center">${r.q}</td><td>${r.u}</td><td>${r.c}</td><td class="${r.ok?'result-correct':'result-incorrect'}">${r.ok?'&#10004;':'&#10008;'}</td></tr>`;});
+        html+='</table>';document.getElementById('result-details').innerHTML=html;
+        document.getElementById('result-modal').style.display='flex';
+    }
+
+    document.getElementById('deliver-button').addEventListener('click',checkAnswers);
+    document.getElementById('modal-close').addEventListener('click',()=>document.getElementById('result-modal').style.display='none');
+    document.getElementById('start-test-btn').addEventListener('click',()=>{document.getElementById('start-overlay').style.display='none';startTimer();});
+
+    // Highlighting
+    let savedHlRange = null;
+    document.addEventListener('mouseup', e => {
+        if (e.target.closest('.hl-f')) return;
+        document.querySelectorAll('.hl-f').forEach(b=>b.remove());
+        savedHlRange = null;
+        setTimeout(()=>{
+            const sel=window.getSelection();
+            if(sel&&!sel.isCollapsed&&sel.toString().trim()){
+                const r=sel.getRangeAt(0), n=r.commonAncestorContainer.nodeType===3?r.commonAncestorContainer.parentElement:r.commonAncestorContainer;
+                if(n&&n.closest('.left-panel')){
+                    savedHlRange = r.cloneRange();
+                    const b=document.createElement('button');b.className='hl-f';b.textContent='Highlight';
+                    b.style.cssText='position:absolute;z-index:9999;background:rgba(245,158,11,0.8);color:#000;border:none;padding:3px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;';
+                    const rect=r.getBoundingClientRect();b.style.left=`${window.scrollX+rect.left}px`;b.style.top=`${window.scrollY+rect.top-28}px`;
+                    document.body.appendChild(b);
+                    b.addEventListener('mousedown', (ev)=>{
+                        ev.preventDefault(); ev.stopPropagation();
+                        if(savedHlRange){
+                            const sel2=window.getSelection(); sel2.removeAllRanges(); sel2.addRange(savedHlRange);
+                            const sp=document.createElement('span');sp.className='highlight';
+                            try{savedHlRange.surroundContents(sp);}catch(err){const f=savedHlRange.extractContents();sp.appendChild(f);savedHlRange.insertNode(sp);}
+                            sel2.removeAllRanges();
+                        }
+                        b.remove(); savedHlRange=null;
+                    });
+                }
+            }
+        },10);
+    });
+    document.addEventListener('click',e=>{if(e.target.closest('.hl-f'))return;const h=e.target.closest('.highlight');if(h&&!window.getSelection().toString().trim()){const p=h.parentNode;while(h.firstChild)p.insertBefore(h.firstChild,h);p.removeChild(h);p.normalize();}});
+    document.addEventListener('scroll',()=>{document.querySelectorAll('.hl-f').forEach(b=>b.remove());savedHlRange=null;},true);
+
+    switchToPart(1);
+    </script>
+</body>
+</html>

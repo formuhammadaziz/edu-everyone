@@ -1,0 +1,161 @@
+{% extends "exam_base.html" %}
+{% load static %}
+
+{% block title %}Listening - IELTS Exam{% endblock %}
+{% block section_icon %}headphones{% endblock %}
+{% block section_name %}Listening{% endblock %}
+
+{% block content %}
+<input type="hidden" id="remaining-seconds" value="{{ remaining_seconds }}">
+<input type="hidden" id="attempt-id" value="{{ attempt.id }}">
+
+<form method="post" id="exam-submit-form" action="{% url 'exams:submit_section' attempt.id 'listening' %}">
+    {% csrf_token %}
+</form>
+
+<div class="container-fluid h-100">
+    <!-- Audio Player -->
+    {% if section.audio_file %}
+    <div class="audio-container mb-3">
+        <div class="d-flex align-items-center justify-content-center gap-3">
+            <i class="fas fa-headphones fa-lg" style="color:var(--accent-light)"></i>
+            <span class="small" style="color: #cbd5e1;">Listen carefully. You cannot rewind the audio.</span>
+        </div>
+        <audio id="listening-audio" controlsList="nodownload noplaybackrate"
+               onended="document.getElementById('exam-submit-form').submit();">
+            <source src="{{ section.audio_file.url }}" type="audio/mpeg">
+        </audio>
+        <div class="mt-2">
+            <button class="play-audio-btn" id="play-audio-btn">
+                <i class="fas fa-play me-1"></i>Play Audio
+            </button>
+            <span class="ms-2 small" id="audio-status" style="color:var(--exam-muted)">Click to start</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="audio-container mb-3">
+        <p class="mb-0 small" style="color:var(--exam-muted)">
+            <i class="fas fa-info-circle me-1" style="color:var(--accent-light)"></i>
+            No audio file uploaded. Answer the questions below.
+        </p>
+    </div>
+    {% endif %}
+
+    <div class="row g-3">
+        <!-- Question Nav -->
+        <div class="col-md-2 col-lg-1">
+            <div class="question-nav">
+                {% for q in questions %}
+                <a href="#q-{{ q.id }}" class="q-dot {% if q.id|stringformat:'d' in existing %}answered{% endif %}"
+                   data-q="{{ q.id }}">{{ q.question_number }}</a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Questions -->
+        <div class="col-md-10 col-lg-11">
+            <div class="listening-questions">
+                {% for q in questions %}
+                <div class="question-card {% if q.id|stringformat:'d' in existing %}answered{% endif %}"
+                     data-question-id="{{ q.id }}" id="q-{{ q.id }}">
+                    <div class="d-flex align-items-start">
+                        <span class="question-number">{{ q.question_number }}</span>
+                        <div class="flex-grow-1">
+                            <p class="mb-2 question-text">{{ q.question_text }}</p>
+
+                            {% if q.question_type == 'multiple_choice' or q.question_type == 'map_labelling' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                                       data-question-id="{{ q.id }}" value="A"
+                                       id="q{{ q.id }}_a">
+                                <label class="form-check-label" for="q{{ q.id }}_a">A) {{ q.option_a }}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                                       data-question-id="{{ q.id }}" value="B"
+                                       id="q{{ q.id }}_b">
+                                <label class="form-check-label" for="q{{ q.id }}_b">B) {{ q.option_b }}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                                       data-question-id="{{ q.id }}" value="C"
+                                       id="q{{ q.id }}_c">
+                                <label class="form-check-label" for="q{{ q.id }}_c">C) {{ q.option_c }}</label>
+                            </div>
+                            {% if q.option_d %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                                       data-question-id="{{ q.id }}" value="D"
+                                       id="q{{ q.id }}_d">
+                                <label class="form-check-label" for="q{{ q.id }}_d">D) {{ q.option_d }}</label>
+                            </div>
+                            {% endif %}
+
+                            {% elif q.question_type == 'fill_blank' %}
+                            <input type="text" class="fill-blank-input"
+                                   data-question-id="{{ q.id }}" placeholder="Type your answer..."
+                                   value="{{ existing|default:'' }}">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const audio = document.getElementById('listening-audio');
+    const playBtn = document.getElementById('play-audio-btn');
+    const statusEl = document.getElementById('audio-status');
+
+    if (playBtn && audio) {
+        playBtn.addEventListener('click', function() {
+            audio.play();
+            playBtn.disabled = true;
+            playBtn.innerHTML = '<i class="fas fa-volume-up me-1"></i>Playing...';
+            statusEl.textContent = 'Audio is playing';
+        });
+        let lastTime = 0;
+        audio.addEventListener('timeupdate', function() {
+            if (Math.abs(audio.currentTime - lastTime) > 2) {
+                audio.currentTime = lastTime;
+            }
+            lastTime = audio.currentTime;
+        });
+    }
+
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const qId = this.dataset.questionId;
+            let input = document.querySelector(`#exam-submit-form input[name="question_${qId}"]`);
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `question_${qId}`;
+                document.getElementById('exam-submit-form').appendChild(input);
+            }
+            input.value = this.value;
+        });
+    });
+
+    document.querySelectorAll('.fill-blank-input').forEach(el => {
+        el.addEventListener('input', function() {
+            const qId = this.dataset.questionId;
+            let input = document.querySelector(`#exam-submit-form input[name="question_${qId}"]`);
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `question_${qId}`;
+                document.getElementById('exam-submit-form').appendChild(input);
+            }
+            input.value = this.value;
+        });
+    });
+});
+</script>
+{% endblock %}

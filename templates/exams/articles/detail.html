@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} - EduEveryone{% endblock %}
+
+{% block extra_css %}
+<style>
+    .article-container {
+        max-width: 780px;
+        margin: 0 auto;
+    }
+    .article-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .article-header h1 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        line-height: 1.3;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+    .article-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .article-meta .author {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--accent-light);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .article-meta .author .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+    .article-meta .date {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    .article-meta .source {
+        background: var(--accent-glow);
+        color: var(--accent-light);
+        padding: 0.2rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .article-tags {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+    .article-body {
+        line-height: 1.95;
+        color: #cbd5e1;
+        font-size: 1.02rem;
+    }
+    .article-body p {
+        margin-bottom: 1.25em;
+    }
+    .article-body h2 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--accent-light);
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .article-body strong {
+        color: var(--text-primary);
+    }
+    .article-body em {
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
+    /* Highlight feature */
+    .text-highlight {
+        background-color: rgba(245, 158, 11, 0.3);
+        border-radius: 2px;
+        cursor: pointer;
+    }
+    .hl-toolbar {
+        position: fixed;
+        z-index: 9999;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 4px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        display: none;
+    }
+    .hl-toolbar button {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .hl-toolbar button:hover {
+        background: var(--accent-glow);
+        color: var(--accent-light);
+    }
+    .hl-toolbar .hl-btn { color: var(--warning); }
+    .hl-toolbar .rm-btn { color: var(--danger); }
+
+    .article-footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="article-container fade-in-up">
+    <!-- Back button -->
+    <a href="{% url 'exams:articles' %}" class="d-inline-flex align-items-center gap-2 mb-4" style="color:var(--text-muted);text-decoration:none;font-size:0.9rem;">
+        <i class="fas fa-arrow-left"></i> Back to Exams
+    </a>
+
+    <div class="article-header">
+        <h1>{{ article.title }}</h1>
+        <div class="article-meta">
+            <span class="author">
+                <span class="avatar">{{ article.author_initial }}</span>
+                {{ article.author }}
+            </span>
+            <span class="date"><i class="fas fa-calendar-alt me-1"></i>{{ article.date }}</span>
+            <span class="source"><i class="fas fa-external-link-alt me-1"></i>{{ article.source }}</span>
+        </div>
+        <div class="article-tags mt-2">
+            {% for tag in article.tags %}
+            <span class="badge bg-light"><i class="fas fa-tag me-1"></i>{{ tag }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="article-body" id="article-body">
+        {{ article.content|safe }}
+    </div>
+
+    <div class="article-footer">
+        <a href="{% url 'exams:articles' %}" class="btn btn-outline-light btn-sm px-4">
+            <i class="fas fa-arrow-left me-1"></i> Back to All Articles
+        </a>
+    </div>
+</div>
+
+<!-- Highlight Toolbar -->
+<div class="hl-toolbar" id="hl-toolbar">
+    <button class="hl-btn" id="hl-add-btn"><i class="fas fa-highlighter"></i> Highlight</button>
+</div>
+<div class="hl-toolbar" id="hl-remove-toolbar">
+    <button class="rm-btn" id="hl-rm-btn"><i class="fas fa-eraser"></i> Remove</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const articleBody = document.getElementById('article-body');
+    const hlToolbar = document.getElementById('hl-toolbar');
+    const rmToolbar = document.getElementById('hl-remove-toolbar');
+    const hlAddBtn = document.getElementById('hl-add-btn');
+    const hlRmBtn = document.getElementById('hl-rm-btn');
+    let savedRange = null;
+    let targetHighlight = null;
+
+    function hideToolbars() {
+        hlToolbar.style.display = 'none';
+        rmToolbar.style.display = 'none';
+        savedRange = null;
+        targetHighlight = null;
+    }
+
+    // Show highlight toolbar on text selection
+    document.addEventListener('mouseup', (e) => {
+        // Don't interfere with toolbar clicks
+        if (e.target.closest('#hl-toolbar') || e.target.closest('#hl-remove-toolbar')) return;
+
+        setTimeout(() => {
+            const sel = window.getSelection();
+            if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+                const range = sel.getRangeAt(0);
+                const container = range.commonAncestorContainer.nodeType === 3
+                    ? range.commonAncestorContainer.parentElement
+                    : range.commonAncestorContainer;
+
+                if (container && container.closest('#article-body')) {
+                    savedRange = range.cloneRange();
+                    const rect = range.getBoundingClientRect();
+                    hlToolbar.style.display = 'flex';
+                    hlToolbar.style.left = (rect.left + rect.width / 2 - hlToolbar.offsetWidth / 2) + 'px';
+                    hlToolbar.style.top = (rect.top - hlToolbar.offsetHeight - 8) + 'px';
+                    rmToolbar.style.display = 'none';
+                } else {
+                    hideToolbars();
+                }
+            } else {
+                // Check if clicked on a highlight
+                const hl = e.target.closest('.text-highlight');
+                if (hl) {
+                    targetHighlight = hl;
+                    const rect = hl.getBoundingClientRect();
+                    rmToolbar.style.display = 'flex';
+                    rmToolbar.style.left = (rect.left + rect.width / 2 - rmToolbar.offsetWidth / 2) + 'px';
+                    rmToolbar.style.top = (rect.top - rmToolbar.offsetHeight - 8) + 'px';
+                    hlToolbar.style.display = 'none';
+                } else {
+                    hideToolbars();
+                }
+            }
+        }, 10);
+    });
+
+    // Apply highlight
+    hlAddBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (savedRange) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+
+            const span = document.createElement('span');
+            span.className = 'text-highlight';
+            try {
+                savedRange.surroundContents(span);
+            } catch (err) {
+                const fragment = savedRange.extractContents();
+                span.appendChild(fragment);
+                savedRange.insertNode(span);
+            }
+            sel.removeAllRanges();
+        }
+        hideToolbars();
+    });
+
+    // Remove highlight
+    hlRmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (targetHighlight) {
+            const parent = targetHighlight.parentNode;
+            while (targetHighlight.firstChild) {
+                parent.insertBefore(targetHighlight.firstChild, targetHighlight);
+            }
+            parent.removeChild(targetHighlight);
+            parent.normalize();
+        }
+        hideToolbars();
+    });
+
+    // Hide on scroll
+    window.addEventListener('scroll', hideToolbars, true);
+});
+</script>
+{% endblock %}

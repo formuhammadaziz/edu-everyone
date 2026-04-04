@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Articles - EduEveryone{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-newspaper me-2" style="color:var(--accent-light)"></i>Reading Articles</h2>
+        <p class="text-muted mb-0">Practice your reading skills with real-world articles</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(6,182,212,0.1);"><i class="fas fa-brain" style="color:#06b6d4;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">The 'Ideal Worker' Myth</h5><small class="text-muted">Hadar Elraz</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">Why the idea of an 'ideal worker' can be so harmful for people with mental health conditions.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Workplace</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Mental Health</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'ideal-worker' %}" class="btn btn-outline-info w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(245,158,11,0.1);"><i class="fas fa-table-tennis-paddle-ball" style="color:#f59e0b;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">Table Tennis in Film</h5><small class="text-muted">Jeff Scheible</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">A brief history of table tennis in film — from Forrest Gump to Marty Supreme.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Film</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Sports</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'table-tennis' %}" class="btn btn-outline-warning w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(139,92,246,0.1);"><i class="fas fa-video" style="color:#8b5cf6;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">Covert Filming & The Law</h5><small class="text-muted">Subhajit Basu</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">Is it illegal to make online videos of someone without their consent?</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Law</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Privacy</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'covert-filming' %}" class="btn btn-outline-primary w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(16,185,129,0.1);"><i class="fas fa-wind" style="color:#10b981;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">House Burping</h5><small class="text-muted">Vikram Niranjan</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">What is this German habit and is it good for your health?</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Health</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Lifestyle</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'house-burping' %}" class="btn btn-outline-success w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(239,68,68,0.1);"><i class="fas fa-flask" style="color:#ef4444;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">Forever Chemicals</h5><small class="text-muted">Ivan Kourtchev</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">How the UK government plans to limit 'forever chemical' pollution.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Environment</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Policy</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'forever-chemicals' %}" class="btn btn-outline-danger w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(245,158,11,0.1);"><i class="fas fa-city" style="color:#f59e0b;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">City Skylines & Climate</h5><small class="text-muted">Mohamed Shaheen</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">City skylines need an upgrade in the face of climate stress.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Climate</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Engineering</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'city-skylines' %}" class="btn btn-outline-warning w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(16,185,129,0.1);"><i class="fas fa-seedling" style="color:#10b981;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">Bamboo: Superfood?</h5><small class="text-muted">Lee Smith</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">Superfood or superfad? Here's what our study actually said.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Food</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Science</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'bamboo-superfood' %}" class="btn btn-outline-success w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(139,92,246,0.1);"><i class="fas fa-vial" style="color:#8b5cf6;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">Alzheimer's Home Test</h5><small class="text-muted">Eleftheria Kodosaki</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">How our lab is helping develop an Alzheimer's test that can be done at home.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Medicine</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Science</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'alzheimers-test' %}" class="btn btn-outline-primary w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(99,102,241,0.1);"><i class="fas fa-dna" style="color:#6366f1;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">Genes & Longevity</h5><small class="text-muted">Bradley Elliott</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">What new twins study reveals about genes, environment and longevity.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Science</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Genetics</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'twins-longevity' %}" class="btn btn-outline-primary w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3" style="width:48px;height:48px;background:rgba(16,185,129,0.1);"><i class="fas fa-leaf" style="color:#10b981;font-size:1.2rem"></i></div>
+                    <div><h5 class="card-title mb-0 fw-bold" style="font-size:0.95rem">Plant-Based Foods</h5><small class="text-muted">Meera Iona Inglis</small></div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">How to keep plant-based foods on the table now that Veganuary is over.</p>
+                <div class="d-flex flex-wrap gap-2"><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Food</span><span class="badge bg-light"><i class="fas fa-tag me-1"></i>Sustainability</span></div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);"><a href="{% url 'exams:article' 'plant-based-foods' %}" class="btn btn-outline-success w-100"><i class="fas fa-book-reader me-1"></i>Read</a></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

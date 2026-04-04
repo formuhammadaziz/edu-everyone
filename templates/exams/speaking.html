@@ -1,0 +1,180 @@
+{% extends "exam_base.html" %}
+{% load static %}
+
+{% block title %}Speaking - IELTS Exam{% endblock %}
+{% block section_icon %}microphone{% endblock %}
+{% block section_name %}Speaking{% endblock %}
+
+{% block content %}
+<input type="hidden" id="remaining-seconds" value="{{ remaining_seconds }}">
+<input type="hidden" id="attempt-id" value="{{ attempt.id }}">
+
+<form method="post" id="exam-submit-form" action="{% url 'exams:submit_section' attempt.id 'speaking' %}">
+    {% csrf_token %}
+</form>
+
+<div class="container" style="max-width: 800px; overflow-y: auto; max-height: calc(100vh - 60px); padding-bottom: 2rem;">
+    <!-- Part selector -->
+    <div class="text-center mb-4">
+        <div class="d-inline-flex" role="group">
+            {% regroup questions by speaking_part as part_list %}
+            {% for part in part_list %}
+            <button class="part-btn {% if forloop.first %}active{% endif %}"
+                    data-part="{{ part.grouper|default:'1' }}">
+                Part {{ part.grouper|default:"1" }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Questions by part -->
+    {% regroup questions by speaking_part as part_list %}
+    {% for part in part_list %}
+    <div class="speaking-part {% if not forloop.first %}d-none{% endif %}" data-part="{{ part.grouper|default:'1' }}">
+        {% if part.grouper == 2 %}
+        <div class="speaking-card mb-4">
+            <div class="text-center">
+                <h6 class="fw-bold mb-3" style="color:var(--accent-light)">
+                    <i class="fas fa-clock me-1"></i>Preparation Time
+                </h6>
+                <div class="prep-timer-display" id="prep-timer">01:00</div>
+                <button class="play-audio-btn mt-3" id="start-prep-btn">
+                    <i class="fas fa-play me-1"></i>Start 1-minute preparation
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        {% for q in part.list %}
+        <div class="speaking-card mb-3" id="speaking-q-{{ q.id }}">
+            <div class="d-flex align-items-start mb-3">
+                <span class="question-number">{{ q.question_number }}</span>
+                <p class="fs-6 mb-0 question-text">{{ q.question_text }}</p>
+            </div>
+
+            <div class="text-center py-2">
+                <button class="record-btn" data-question-id="{{ q.id }}" title="Click to record">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <p class="mt-2 small recording-status" data-q="{{ q.id }}" style="color:var(--exam-muted)">
+                    Click the microphone to start recording
+                </p>
+                <audio class="mt-2 d-none playback-audio" data-q="{{ q.id }}" controls></audio>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <!-- Navigation -->
+    <div class="text-center mt-4 pb-4">
+        <button class="btn btn-outline-light btn-sm me-2 px-3" id="prev-part-btn" disabled>
+            <i class="fas fa-arrow-left me-1"></i>Previous
+        </button>
+        <button class="btn btn-primary btn-sm px-3" id="next-part-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;">
+            Next<i class="fas fa-arrow-right ms-1"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const attemptId = document.getElementById('attempt-id').value;
+    let currentPart = 1;
+    const parts = document.querySelectorAll('.speaking-part');
+    const partBtns = document.querySelectorAll('.part-btn');
+
+    function showPart(partNum) {
+        parts.forEach(p => p.classList.toggle('d-none', p.dataset.part != partNum));
+        partBtns.forEach(b => b.classList.toggle('active', b.dataset.part == partNum));
+        currentPart = partNum;
+        document.getElementById('prev-part-btn').disabled = currentPart <= 1;
+        document.getElementById('next-part-btn').disabled = currentPart >= parts.length;
+    }
+
+    partBtns.forEach(btn => btn.addEventListener('click', () => showPart(parseInt(btn.dataset.part))));
+    document.getElementById('prev-part-btn').addEventListener('click', () => { if (currentPart > 1) showPart(currentPart - 1); });
+    document.getElementById('next-part-btn').addEventListener('click', () => { if (currentPart < parts.length) showPart(currentPart + 1); });
+
+    // Prep timer
+    const prepBtn = document.getElementById('start-prep-btn');
+    const prepDisplay = document.getElementById('prep-timer');
+    if (prepBtn) {
+        prepBtn.addEventListener('click', function() {
+            prepBtn.disabled = true;
+            prepBtn.style.opacity = '0.5';
+            let secs = 60;
+            const interval = setInterval(() => {
+                secs--;
+                prepDisplay.textContent = '00:' + String(secs).padStart(2, '0');
+                if (secs <= 0) {
+                    clearInterval(interval);
+                    prepDisplay.textContent = "Start speaking!";
+                    prepDisplay.className = 'prep-timer-display ready';
+                }
+            }, 1000);
+        });
+    }
+
+    // MediaRecorder
+    document.querySelectorAll('.record-btn').forEach(btn => {
+        let mediaRecorder = null;
+        let chunks = [];
+        let isRecording = false;
+
+        btn.addEventListener('click', async function() {
+            const qId = this.dataset.questionId;
+            const statusEl = document.querySelector(`.recording-status[data-q="${qId}"]`);
+            const playbackEl = document.querySelector(`.playback-audio[data-q="${qId}"]`);
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    chunks = [];
+                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: 'audio/webm' });
+                        playbackEl.src = URL.createObjectURL(blob);
+                        playbackEl.classList.remove('d-none');
+                        const formData = new FormData();
+                        formData.append('audio', blob, `speaking_q${qId}.webm`);
+                        fetch(`/exams/${attemptId}/upload-speaking/${qId}/`, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': getCsrfToken() },
+                            body: formData
+                        }).then(r => r.json()).then(data => {
+                            if (data.status === 'ok') {
+                                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:var(--success)"></i> Recording saved';
+                            }
+                        });
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.classList.add('recording');
+                    statusEl.innerHTML = '<i class="fas fa-circle" style="color:var(--danger)"></i> Recording... Click to stop';
+                } catch(err) {
+                    statusEl.textContent = 'Microphone access denied.';
+                    statusEl.style.color = 'var(--danger)';
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.classList.remove('recording');
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+        });
+    });
+
+    function getCsrfToken() {
+        const el = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (el) return el.value;
+        const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
+    }
+});
+</script>
+{% endblock %}

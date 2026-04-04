@@ -1,0 +1,665 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Practice - EduEveryone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-surface: #111827;
+            --bg-card: #1a1f35;
+            --bg-input: #151a2e;
+            --border-color: rgba(255,255,255,0.06);
+            --border-glow: rgba(99,102,241,0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99,102,241,0.15);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== NAVBAR ===== */
+        .exam-navbar {
+            background: rgba(8,12,24,0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 1.25rem;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            height: 56px;
+        }
+        .exam-nav-brand {
+            font-weight: 700; font-size: 1.1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .exam-section-badge {
+            background: var(--accent-glow); color: var(--accent-light);
+            padding: 0.3rem 0.85rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+        }
+        .timer-badge {
+            background: var(--gradient-success); color: white;
+            padding: 0.35rem 1rem; border-radius: 20px; font-size: 0.9rem;
+            font-weight: 700; font-variant-numeric: tabular-nums;
+        }
+        .timer-badge.warning { background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #000 !important; }
+        .timer-badge.danger { background: linear-gradient(135deg, #ef4444, #dc2626) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.8;transform:scale(1.05)} }
+
+        .timer-controls { display: flex; gap: 6px; }
+        .timer-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border-color);
+            border-radius: 50%; width: 32px; height: 32px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .timer-btn:hover { background: var(--accent-glow); color: var(--accent-light); border-color: var(--border-glow); }
+        .timer-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+        .back-link {
+            color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500;
+            display: flex; align-items: center; gap: 6px; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent-light); }
+
+        /* ===== LAYOUT ===== */
+        .main-container { margin-top: 56px; display: flex; flex-direction: column; height: calc(100vh - 56px); }
+        .part-header-bar {
+            background: var(--bg-surface); border-bottom: 1px solid var(--border-color);
+            padding: 0.65rem 1.5rem; font-size: 0.88rem; color: var(--text-secondary);
+        }
+        .part-header-bar strong { color: var(--accent-light); }
+
+        .panels-container { display: flex; flex: 1; overflow: hidden; }
+        .passage-panel {
+            flex: 1; padding: 1.5rem 1.5rem 100px; overflow-y: auto;
+            background: var(--bg-surface); border-right: 1px solid var(--border-color);
+        }
+        .questions-panel {
+            flex: 1; padding: 1.5rem 1.5rem 100px; overflow-y: auto; background: var(--bg-primary);
+        }
+        .resizer {
+            width: 6px; cursor: col-resize; background: var(--border-color);
+            flex-shrink: 0; transition: background 0.2s;
+        }
+        .resizer:hover { background: var(--accent); }
+
+        /* ===== PASSAGE ===== */
+        .reading-passage h2 {
+            font-size: 1.3rem; font-weight: 700; color: var(--accent-light);
+            margin-bottom: 1rem; text-align: center;
+        }
+        .reading-passage p { margin-bottom: 1.1em; line-height: 1.85; color: #cbd5e1; font-size: 0.95rem; }
+
+        /* ===== QUESTIONS ===== */
+        .question { margin-bottom: 2rem; }
+        .question p { margin-bottom: 0.6rem; color: var(--text-primary); font-size: 0.95rem; }
+        .question-prompt {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;
+        }
+        .question-prompt ul { padding-left: 0; list-style: none; }
+        .question-prompt ul li { margin-bottom: 0.4rem; color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* T/F/NG */
+        .tf-question { margin-bottom: 1.25rem; }
+        .tf-question-line {
+            display: flex; align-items: flex-start; padding: 0.6rem 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;
+        }
+        .tf-question-number {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; min-width: 30px; border-radius: 8px;
+            background: var(--gradient-primary); color: white; font-weight: 700; font-size: 0.8rem;
+            margin-right: 0.75rem;
+        }
+        .tf-question-text { padding-top: 4px; color: var(--text-primary); font-size: 0.93rem; }
+        .tf-options { padding-left: 0.5rem; }
+        .tf-option {
+            display: flex; align-items: center; margin-bottom: 0.5rem; cursor: pointer;
+            padding: 0.4rem 0.6rem; border-radius: 8px; transition: background 0.15s;
+        }
+        .tf-option:hover { background: var(--accent-glow); }
+        .tf-option input[type="radio"] {
+            margin-right: 10px; transform: scale(1.2); accent-color: var(--accent);
+        }
+        .tf-option label, .tf-option { color: var(--text-secondary); font-size: 0.92rem; }
+
+        /* MCQ */
+        .multi-choice-question { margin-bottom: 1.5rem; padding: 0.5rem; border-radius: 8px; }
+        .multi-choice-option {
+            padding: 0.5rem 0.75rem; border-radius: 8px; margin-bottom: 0.3rem; transition: background 0.15s;
+        }
+        .multi-choice-option:hover { background: var(--accent-glow); }
+        .multi-choice-option label { display: flex; align-items: center; cursor: pointer; font-size: 0.93rem; color: var(--text-secondary); }
+        .multi-choice-option input[type="checkbox"],
+        .multi-choice-option input[type="radio"] { margin-right: 12px; transform: scale(1.3); accent-color: var(--accent); }
+
+        /* Fill blank */
+        .answer-input {
+            background: var(--bg-input); border: 1px solid var(--border-color); color: var(--accent-light);
+            border-radius: 8px; padding: 4px 10px; font-size: 0.95rem; text-align: center;
+            font-weight: 600; transition: all 0.2s; height: 32px; width: 150px;
+        }
+        .answer-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
+        .answer-input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+        /* Paragraph matching */
+        .paragraph-matching-question { display: flex; align-items: center; margin-bottom: 1rem; }
+        .paragraph-matching-question .answer-input { width: 55px; margin-right: 1rem; flex-shrink: 0; }
+        .paragraph-matching-question span { color: var(--text-secondary); font-size: 0.93rem; }
+
+        /* Correct / Incorrect feedback */
+        .answer-input.correct { border-color: var(--success); background: rgba(16,185,129,0.1); color: var(--success); }
+        .answer-input.incorrect { border-color: var(--danger); background: rgba(239,68,68,0.1); color: var(--danger); }
+        .tf-option.correct, .multi-choice-option.correct { background: rgba(16,185,129,0.12); }
+        .tf-option.incorrect, .multi-choice-option.incorrect { background: rgba(239,68,68,0.1); }
+        .correct-answer-highlight, .tf-option.correct-answer-highlight, .multi-choice-option.correct-answer-highlight {
+            background: rgba(16,185,129,0.15) !important; border: 1px solid rgba(16,185,129,0.3) !important;
+            border-radius: 6px; padding: 4px;
+        }
+        .correct-answer-display { font-weight: 600; color: var(--success); margin-left: 10px; font-size: 0.85rem; }
+
+        .highlight { background-color: rgba(245,158,11,0.3); border-radius: 2px; }
+        .hidden { display: none !important; }
+
+        /* ===== BOTTOM NAV ===== */
+        .nav-row {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(8,12,24,0.95); backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            padding: 0 1rem; display: flex; align-items: center; height: 64px; z-index: 100;
+        }
+        .part-nav-wrapper { display: flex; align-items: center; margin-right: 1rem; }
+        .part-nav-btn {
+            background: none; border: none; padding: 0.5rem 0.85rem; font-size: 0.85rem;
+            font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap;
+        }
+        .part-nav-btn:hover { color: var(--text-primary); }
+        .part-nav-wrapper.selected .part-nav-btn { color: var(--accent-light); }
+        .attempted-count { font-size: 0.75rem; color: var(--text-muted); margin-left: 4px; font-weight: 400; }
+        .part-nav-wrapper.selected .attempted-count { display: none; }
+
+        .sub-nav { display: none; gap: 3px; margin-left: 0.5rem; }
+        .part-nav-wrapper.selected .sub-nav { display: flex; }
+
+        .q-btn {
+            width: 30px; height: 30px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+            color: var(--text-muted); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 0.15s;
+        }
+        .q-btn:hover { background: var(--accent-glow); color: var(--accent-light); border-color: var(--border-glow); }
+        .q-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .q-btn.answered { background: rgba(16,185,129,0.15); color: var(--success); border-color: rgba(16,185,129,0.3); }
+        .q-btn.correct { background: var(--success); color: white; border-color: var(--success); }
+        .q-btn.incorrect { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .check-btn {
+            margin-left: auto; background: var(--gradient-primary); color: white; border: none;
+            padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .check-btn:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
+        .check-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Nav arrows */
+        .nav-arrows { position: fixed; bottom: 80px; right: 20px; display: flex; gap: 4px; z-index: 101; }
+        .nav-arrow {
+            width: 40px; height: 40px; background: var(--bg-card); color: var(--text-secondary);
+            border: 1px solid var(--border-color); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; border-radius: 8px;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .nav-arrow:hover { background: var(--accent-glow); color: var(--accent-light); border-color: var(--border-glow); }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ===== RESULTS MODAL ===== */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.hidden { display: none; }
+        .modal-box {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 2rem; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .modal-box h2 { text-align: center; color: var(--text-primary); margin-bottom: 1rem; font-size: 1.3rem; }
+        .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        .results-summary {
+            display: flex; justify-content: space-around; margin-bottom: 1.25rem; padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color); text-align: center;
+        }
+        .results-summary p { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
+        .results-summary .score-val { color: var(--accent-light); }
+        .results-summary .band-val { color: var(--success); }
+        .results-details { overflow-y: auto; }
+        .result-row {
+            display: grid; grid-template-columns: 40px 1fr 1fr; gap: 12px;
+            padding: 0.5rem 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.88rem;
+        }
+        .result-row.incorrect { background: rgba(239,68,68,0.08); border-radius: 6px; }
+        .result-row .q-num { font-weight: 700; color: var(--text-primary); }
+        .result-row .user-ans { color: var(--text-secondary); }
+        .result-row .correct-ans { color: var(--success); font-weight: 500; }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+        @media (max-width: 768px) {
+            .panels-container { flex-direction: column; }
+            .passage-panel, .questions-panel { max-height: 50vh; }
+            .resizer { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="exam-navbar">
+        <div class="d-flex align-items-center gap-3">
+            <span class="exam-nav-brand"><i class="fas fa-graduation-cap me-2"></i>EduEveryone</span>
+            <span class="exam-section-badge"><i class="fas fa-book me-1"></i>Reading</span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="timer-badge" id="timer-badge"><i class="fas fa-clock me-1"></i><span id="timer-display">60:00</span></div>
+            <div class="timer-controls">
+                <button class="timer-btn" id="timer-toggle" title="Pause/Resume">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <button class="timer-btn" id="timer-reset" title="Reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                </button>
+            </div>
+            <a href="{% url 'exams:list' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Part headers -->
+        <div id="part-header-1" class="part-header-bar"><strong>Part 1</strong> &mdash; Read the text and answer <strong>Questions 1-13</strong></div>
+        <div id="part-header-2" class="part-header-bar hidden"><strong>Part 2</strong> &mdash; Read the text and answer <strong>Questions 14-26</strong></div>
+        <div id="part-header-3" class="part-header-bar hidden"><strong>Part 3</strong> &mdash; Read the text and answer <strong>Questions 27-40</strong></div>
+
+        <div class="panels-container">
+            <!-- PASSAGES -->
+            <div class="passage-panel" id="passage-panel">
+                <div id="passage-1" class="reading-passage">
+                    <h2>Katherine Mansfield</h2>
+                    <p style="font-style:italic;text-align:center;color:var(--text-muted)">Katherine Mansfield was a modernist writer of short fiction who was born and brought up in New Zealand</p>
+                    <p>Katherine Mansfield Beauchamp Murry was born in 1888, into a prominent family in Wellington, New Zealand. She became one of New Zealand's best-known writers, using the pen name of Katherine Mansfield. The daughter of a banker, and born into a middle-class family, she was also a first cousin of Countess Elizabeth von Arnim, a distinguished novelist in her time. Mansfield had two older sisters and a younger brother. Her father, Harold Beauchamp, went on to become the chairman of the Bank of New Zealand. In 1893, the Mansfield family moved to Karori, a suburb of Wellington, where Mansfield would spend the happiest years of her childhood; she later used her memories of this time as an inspiration for her <em>Prelude</em> story.</p>
+                    <p>Her first published stories appeared in the High School Reporter and the Wellington Girls' High School magazine in 1898 and 1899. In 1902, she developed strong feelings for a musician who played the cello, Arnold Trowell, although her feelings were not, for the most part, returned. Mansfield herself was an accomplished cellist, having received lessons from Trowell's father. Mansfield wrote in her journals of feeling isolated to some extent in New Zealand, and, in general terms of her interest in the Maori people (New Zealand's native people), who were often portrayed in a sympathetic light in her later stories, such as <em>How Pearl Button was Kidnapped</em>.</p>
+                    <p>She moved to London in 1903, where she attended Queen's College, along with her two sisters. Mansfield recommenced playing the cello, an occupation that she believed, during her time at Queen's, she would take up professionally. She also began contributing to the college newspaper, with such a dedication to it that she eventually became its editor. She was particularly interested in the works of the French writers of this period and on the 19th-century British writer, Oscar Wilde, and she was appreciated amongst fellow students at Queen's for her lively and charismatic approach to life and work. She met fellow writer Ida Baker, a South African, at the college, and the pair became lifelong friends. Mansfield did not actively support the suffragette movement in the UK. Women in New Zealand had gained the right to vote in 1893.</p>
+                    <p>Mansfield first began journeying into other parts of Europe in the period 1903-1906, mainly to Belgium and Germany. After finishing her schooling in England, she returned to her New Zealand home in 1906, only then beginning to write short stories in a serious way. She had several works published in Australia in a magazine called <em>Native Companion</em>, which was her first paid writing work, and by this time she had her mind set on becoming a professional writer. It was also the first occasion on which she used the pseudonym "K. Mansfield".</p>
+                    <p>Mansfield rapidly grew discontented with the provincial New Zealand lifestyle, and with her family. Two years later she headed again to London. Her father sent her an annual subsidy of &pound;100 for the rest of her life. In later years, she would express both admiration and disdain for New Zealand in her journals.</p>
+                    <p>In 1911, Mansfield met John Middleton Murry, the Oxford scholar and editor of the literary magazine <em>Rhythm</em>. They were later to marry in 1918. Mansfield became a co-editor of <em>Rhythm</em>, which was subsequently called <em>The Blue Review</em>, in which more of her works were published. She and Murry lived in various houses in England and briefly in Paris. <em>The Blue Review</em> failed to gain enough readers and was no longer published. Their attempt to set up as writers in Paris was cut short by Murry's bankruptcy, which resulted from the failure of this and other journals. Life back in England meant frequently changed addresses and very limited funds.</p>
+                    <p>Between 1915 and 1918, Mansfield moved between England and Bandol, France. She and Murry developed close contact with other well-known writers of the time such as D.H. Lawrence, Bertrand Russell and Aldous Huxley. By October 1918 Mansfield had become seriously ill; she had been diagnosed with tuberculosis and was advised to enter a sanatorium. She could no longer spend time with writers in London. In the autumn of 1918 she was so ill that she decided to go to Ospedaletti in Italy. It was the publication of <em>Bliss and Other Stories</em> in 1920 that was to solidify Mansfield's reputation as a writer.</p>
+                    <p>Mansfield also spent time in Menton, France, as the tenant of her father's cousin at "The Villa Isola Bella". There she wrote what she pronounced to be "...the only story that satisfies me to any extent".</p>
+                    <p>Mansfield produced a great deal of work in the final years of her life, and much of her prose and poetry remained unpublished at her death in 1923. After her death, her husband, Murry, took on the task of editing and publishing her works. His efforts resulted in two additional volumes of short stories, <em>The Doves' Nest</em> and <em>Something Childish</em>, published in 1923 and 1924 respectively, the publication of her <em>Poems</em> as well as a collection of critical writings (<em>Novels and Novelists</em>) and a number of editions of Mansfield's previously unpublished letters and journals.</p>
+                </div>
+                <div id="passage-2" class="reading-passage hidden">
+                    <h2>Growing more for less</h2>
+                    <p style="text-align:center;font-style:italic;color:var(--text-muted)">Satellite technology is helping farmers boost crop yields</p>
+                    <p><strong style="color:var(--accent-light)">A</strong> For farmers, working out the optimal amount of seed, fertiliser, pesticide and water to scatter on a field can make, or break, the subsequent harvest. Regular laboratory analyses of soil and plant samples from various parts of the field can help &mdash; but such expertise is costly, and often unavailable. However, a new and cheaper method of doing this analysis is now on offer. Precise prescriptions for growing crops can be obtained quickly, and less expensively, by calculating the amount of electromagnetic radiation reflected from agricultural land. The data is collected by orbiting satellites.</p>
+                    <p><strong style="color:var(--accent-light)">B</strong> Examining the wavelength of the radiation that is reflected can reveal, with surprising precision, the properties of the soil, the quantity of crop being grown, and the levels in those crops of chlorophyll, various minerals, moisture and other indicators of their quality. If recent and forecast weather data is added to the mix, detailed maps can be produced indicating exactly how, where and when crops should be grown. The service usually costs less than US $15 per hectare for a handful of readings a year, and can increase yields by as much as 10%.</p>
+                    <p><strong style="color:var(--accent-light)">C</strong> Such precision farming using satellite-based intelligence is a relatively new technique. Even so, it is catching on quickly. Five times a year, for example, a French cereal-growers' co-operative called S&eacute;v&eacute;pi purchases satellite data and makes it available to its members in the form of maps of their fields, divided into three or four colour-coded zones per hectare. For each zone, one of about 50 fertiliser formulas is recommended. On top of this, if the wheat in the field has already grown quite high early in the season, and heavy showers are expected, an appropriate dose of growth regulator is recommended for each zone. (Long, fragile stems break more easily in downpours.) Then, farm vehicles equipped with global-positioning system locators automatically mix and apply the prescribed dose to each area.</p>
+                    <p><strong style="color:var(--accent-light)">D</strong> France is the pioneer in this sort of surveillance. More farmland is analysed by satellite there than in any other country, according to Infoterra (a subsidiary of EADS Astrium), the firm that is France's largest provider of such information, supplying data to companies such as S&eacute;v&eacute;pi. Moreover, Henri Douche, head of Infoterra's agriculture sales in Toulouse, reckons the amount of monitored farmland will increase as weather patterns change and farmers can no longer rely on the past as a guide to the future. When confounded by the yield variations that these new weather patterns will bring, even farmers who are afraid of new technology will sign up, he says.</p>
+                    <p><strong style="color:var(--accent-light)">E</strong> Inexpensive data on the productivity of land is advantageous to governments, too. Areas where fertilisers and pesticides are being applied excessively can be pinpointed, studied and regulated by environmental and land-use agencies. Guy Lafond, an agronomist with Agriculture and Agri-Food Canada, a government agency, says the satellite data it purchases is proving useful for the study of fields with declining productivity in the province of Saskatchewan. Overkill with nitrate fertilisers (which are also a source of greenhouse gases) appears partly responsible. And according to RapidEye, a German satellite operator, insurance companies are also studying satellite data with a view to selling insurance policies to governments of famine-prone countries that might be threatened by crop failure.</p>
+                    <p><strong style="color:var(--accent-light)">F</strong> In March, RapidEye began selling data that helps forecast harvests. &ldquo;Too often, farmers limit productivity by managing fields uniformly,&rdquo; says Fredrick Jung-Rothenh&auml;usler, head of product development at the firm's headquarters in Brandenburg an der Havel. &ldquo;Our satellites are the first commercial satellites to include the Red-Edge band of the light spectrum, which is sensitive to changes in chlorophyll content. More research will be necessary to realise the full potential of the Red-Edge band. However, this band can assist in monitoring vegetation health, improving species separation and also help in measuring protein and nitrogen content in biomass.&rdquo; The company's data, which comes from both Europe and the Americas, breaks field productivity down into patches just five metres square.</p>
+                    <p><strong style="color:var(--accent-light)">G</strong> The advantages that satellite technology provides in terms of precision farming do not have to be restricted to rich countries. In Africa, where many soils have become badly depleted of nutrients, better fertiliser management would greatly improve the situation. As a consequence, the charitable trust World Agroforestry Centre, in the city of Nairobi, in Kenya, has begun to build up a catalogue of the radiation patterns derived from around 100,000 samples of African soils. The information is the key to understanding the potential of these soils to be more agriculturally productive. Once passed on to the International Centre for Tropical Agriculture, based in Colombia, South America, it is intended that the information be used to build a database called the &ldquo;Digital Soil Map&rdquo;. When ready, this will provide farmers with free forecasts, developed with regularly updated satellite imagery, across farmland in a number of countries in Africa. This is information which will almost certainly assist in improving crop yields. For a hunger-ravaged continent, that is good news indeed.</p>
+                </div>
+                <div id="passage-3" class="reading-passage hidden">
+                    <h2>What makes a musical expert?</h2>
+                    <p style="text-align:center;font-style:italic;color:var(--text-muted)">How does someone become expert in music? And is it really possible to have a 'talent' for music?</p>
+                    <p>Does that class of people acknowledged to be musical experts just have more of the same basic skills we are all endowed with, or do they have a set of abilities or neural structures that are totally different from those of the rest of us? Are high levels of musical achievement simply the result of training and practice, or are they based on innate brain structure &mdash; what we refer to as 'talent'?</p>
+                    <p>Talent can be defined as something that originates in genetic structures and that is identifiable by trained people who can recognize its existence before a person has achieved exceptional levels of performance. The emphasis on early identification means that to investigate it, we study the development of skills in children.</p>
+                    <p>It is evident that some children acquire skills more rapidly than others: the age of onset for walking and talking varies widely, even between children in the same household. There may be genetic factors at work, but these are closely linked with other factors with a presumably environmental component such as motivation and family dynamics. Similar factors can influence musical development and can mask the contribution of genetics to musical ability.</p>
+                    <p>Brain studies, so far, haven't been of much use in sorting out the issues. Gottfried Schlaug at Harvard collected brain scans of individuals with absolute pitch (AP) and showed that a region in the brain called the planum temporale is larger in these people than in others. This suggests that the planum is involved in AP, but it's not clear if it starts out larger in people who eventually acquire AP, or if the acquisition of AP makes the planum increase in size.</p>
+                    <p>Results of research into the areas of the brain involved in skilled motor movement are more conclusive. Studies of violin players have shown that the region of the brain responsible for controlling the movement of the left hand (the hand that requires greater precision in violin playing) increases in size as a result of practice. We do not know yet if the propensity for increase pre-exists in some people and not others.</p>
+                    <p>The evidence against talent comes from research on how much training the experts do. Like experts in mathematics, chess, or sports, experts in music require lengthy periods of instruction and practice. In several studies, the very best music students were found to have practiced more than twice as much as the others. In another study, students were secretly divided into two groups based on teachers' perceptions of their talent. Several years later, it was found that the students who achieved the highest performance ratings had practiced the most, irrespective of which 'talent' group they had been assigned to, suggesting that practice does not merely correlate with achievement, but causes it.</p>
+                    <p>Anders Ericsson, at Florida State University, approaches the topic of musical expertise as a general problem in cognitive psychology. He takes as a starting point the assumption that there are certain issues involved in becoming an expert at anything; that we can learn about musical expertise by studying expert chess players, athletes, artists, mathematicians, as well as the musicians themselves. The emerging picture from such studies is that ten thousand hours of practice is required to achieve the level of mastery associated with being a world-class expert &mdash; in anything. In study after study, of composers, ice skaters, concert pianists, chess players and master criminals, this number comes up again and again. Someone would do this amount of practice if they practiced, for example, roughly 20 hours a week for ten years. Of course, this does not address why some people do not seem to get anywhere when they practice, and why some people get more out of their practice sessions than others. But no-one has yet found a case in which true world-class expertise was accomplished in less time. It seems that it takes the brain this long to assimilate all that it needs to know to achieve true mastery.</p>
+                    <p>The ten-thousand-hour theory is consistent with what we know about how the brain learns. Learning requires the assimilation and consolidation of information in neural tissue. The more experiences we have with something, the stronger the memory/learning trace for that experience becomes. Although people differ in how long it takes them to consolidate information neurally, it remains true that increased practice leads to a greater number of neural traces, which create stronger memory representation.</p>
+                    <p>The classic rebuttal to this theory goes something like this: 'What about Mozart? I hear that he composed his first symphony at the age of four!' First, there is a factual error here: Mozart did not write it until he was eight. Still, this is unusual, to say the least. However, this early work received little acclaim and was not performed very often. In fact, the only reason we know about it is because the child who wrote it grew up to become Mozart. And Mozart had an expert teacher in his father, who was renowned as a teacher of musicians all over Europe. We do not know how much Mozart practiced, but if he started at age two and worked thirty-two hours a week (quite possible, given that his father was a stern taskmaster) he would have made his ten thousand hours by the time he composed his first symphony. This does not mean that there are no genetic factors involved in Mozart's greatness, but that inborn traits may not be the only cause.</p>
+                </div>
+            </div>
+
+            <div class="resizer" id="resizer"></div>
+
+            <!-- QUESTIONS -->
+            <div class="questions-panel" id="questions-panel">
+                <!-- Part 1 Questions -->
+                <div id="questions-1" class="question-set">
+                    <div class="question">
+                        <div class="question-prompt">
+                            <p><strong>Questions 1&ndash;6</strong> &mdash; True / False / Not Given</p>
+                            <p style="color:var(--text-muted);font-size:0.88rem">Do the following statements agree with the information given in the passage?</p>
+                            <ul><li><strong>TRUE</strong> &ndash; agrees with the information</li><li><strong>FALSE</strong> &ndash; contradicts the information</li><li><strong>NOT GIVEN</strong> &ndash; no information on this</li></ul>
+                        </div>
+                        <div class="tf-question" data-q="1"><div class="tf-question-line"><span class="tf-question-number">1</span><span class="tf-question-text">The name Katherine Mansfield, that appears on the writer&rsquo;s book, was exactly the same as her original name.</span></div><div class="tf-options"><label class="tf-option"><input type="radio" name="q1" value="TRUE"> TRUE</label><label class="tf-option"><input type="radio" name="q1" value="FALSE"> FALSE</label><label class="tf-option"><input type="radio" name="q1" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="2"><div class="tf-question-line"><span class="tf-question-number">2</span><span class="tf-question-text">Mansfield won a prize for a story she wrote for the High School Reporter.</span></div><div class="tf-options"><label class="tf-option"><input type="radio" name="q2" value="TRUE"> TRUE</label><label class="tf-option"><input type="radio" name="q2" value="FALSE"> FALSE</label><label class="tf-option"><input type="radio" name="q2" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="3"><div class="tf-question-line"><span class="tf-question-number">3</span><span class="tf-question-text">How Pearl Button Was Kidnapped portrayed Maori people in a favorable way.</span></div><div class="tf-options"><label class="tf-option"><input type="radio" name="q3" value="TRUE"> TRUE</label><label class="tf-option"><input type="radio" name="q3" value="FALSE"> FALSE</label><label class="tf-option"><input type="radio" name="q3" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="4"><div class="tf-question-line"><span class="tf-question-number">4</span><span class="tf-question-text">When Mansfield was at Queen&rsquo;s College, she planned to be a professional writer.</span></div><div class="tf-options"><label class="tf-option"><input type="radio" name="q4" value="TRUE"> TRUE</label><label class="tf-option"><input type="radio" name="q4" value="FALSE"> FALSE</label><label class="tf-option"><input type="radio" name="q4" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="5"><div class="tf-question-line"><span class="tf-question-number">5</span><span class="tf-question-text">Mansfield was unpopular with the other students at Queen&rsquo;s College.</span></div><div class="tf-options"><label class="tf-option"><input type="radio" name="q5" value="TRUE"> TRUE</label><label class="tf-option"><input type="radio" name="q5" value="FALSE"> FALSE</label><label class="tf-option"><input type="radio" name="q5" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="6"><div class="tf-question-line"><span class="tf-question-number">6</span><span class="tf-question-text">In London, Mansfield showed little interest in politics.</span></div><div class="tf-options"><label class="tf-option"><input type="radio" name="q6" value="TRUE"> TRUE</label><label class="tf-option"><input type="radio" name="q6" value="FALSE"> FALSE</label><label class="tf-option"><input type="radio" name="q6" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                    </div>
+                    <div class="question">
+                        <div class="question-prompt">
+                            <p><strong>Questions 7&ndash;13</strong> &mdash; Notes Completion</p>
+                            <p style="color:var(--text-muted);font-size:0.88rem">Complete the notes using <strong>ONE WORD AND/OR A NUMBER</strong> from the passage.</p>
+                            <div style="text-align:center;margin:0.75rem 0"><strong style="color:var(--accent-light)">Katherine Mansfield&rsquo;s Adult Years</strong></div>
+                            <ul style="list-style:disc;padding-left:1.5rem;">
+                                <li>Moved from England back to <input type="text" class="answer-input" id="q7" placeholder="7"></li>
+                                <li>First paid writing work was in a publication based in <input type="text" class="answer-input" id="q8" placeholder="8"></li>
+                                <li>Her <input type="text" class="answer-input" id="q9" placeholder="9"> and the New Zealand way of life made her feel dissatisfied</li>
+                            </ul>
+                            <p style="color:var(--accent-light);font-weight:600;margin-top:1rem">1908</p>
+                            <ul style="list-style:disc;padding-left:1.5rem;"><li>Returned to London</li></ul>
+                            <p style="color:var(--accent-light);font-weight:600;margin-top:1rem">1911&ndash;1919</p>
+                            <ul style="list-style:disc;padding-left:1.5rem;">
+                                <li>Met John Middleton Murry in 1911</li>
+                                <li><input type="text" class="answer-input" id="q10" placeholder="10"> prevented Mansfield and Murry from staying together in Paris</li>
+                                <li>Spent time with distinguished <input type="text" class="answer-input" id="q11" placeholder="11"></li>
+                                <li>From 1916, tuberculosis restricted the time she spent in London</li>
+                            </ul>
+                            <p style="color:var(--accent-light);font-weight:600;margin-top:1rem">1920</p>
+                            <ul style="list-style:disc;padding-left:1.5rem;">
+                                <li>Her <input type="text" class="answer-input" id="q12" placeholder="12"> was consolidated when Bliss and Other Stories was published</li>
+                            </ul>
+                            <p style="color:var(--accent-light);font-weight:600;margin-top:1rem">1923&ndash;1924</p>
+                            <ul style="list-style:disc;padding-left:1.5rem;"><li>Mansfield&rsquo;s <input type="text" class="answer-input" id="q13" placeholder="13"> published more of her works after her death</li></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 2 Questions -->
+                <div id="questions-2" class="question-set hidden">
+                    <div class="question">
+                        <div class="question-prompt"><p><strong>Questions 14&ndash;20</strong> &mdash; Paragraph Matching</p><p style="color:var(--text-muted);font-size:0.88rem">Reading Passage 2 has seven paragraphs, A-G. Which paragraph contains the following information? Write <strong>A-G</strong>. You may use any letter more than once.</p></div>
+                        <div class="paragraph-matching-question"><input type="text" class="answer-input" id="q14" placeholder="14" style="width:55px"><span>an example of how farmers in one country are now using satellite data to determine fertiliser use</span></div>
+                        <div class="paragraph-matching-question"><input type="text" class="answer-input" id="q15" placeholder="15" style="width:55px"><span>a reference to climate change and its effects</span></div>
+                        <div class="paragraph-matching-question"><input type="text" class="answer-input" id="q16" placeholder="16" style="width:55px"><span>a reference to the effect on the soil of using too much fertiliser</span></div>
+                        <div class="paragraph-matching-question"><input type="text" class="answer-input" id="q17" placeholder="17" style="width:55px"><span>an example of information that will be shared between different countries</span></div>
+                        <div class="paragraph-matching-question"><input type="text" class="answer-input" id="q18" placeholder="18" style="width:55px"><span>a mention of the country which is the leader in agricultural technology</span></div>
+                        <div class="paragraph-matching-question"><input type="text" class="answer-input" id="q19" placeholder="19" style="width:55px"><span>a description of an innovation in satellite imaging which requires further study</span></div>
+                        <div class="paragraph-matching-question"><input type="text" class="answer-input" id="q20" placeholder="20" style="width:55px"><span>evidence of the cost effectiveness of using satellite technology in agriculture</span></div>
+                    </div>
+                    <div class="question">
+                        <div class="question-prompt"><p><strong>Questions 21&ndash;22</strong> &mdash; Choose <strong>TWO</strong> letters, A-E</p><p style="color:var(--text-muted);font-size:0.88rem">Which <strong>TWO</strong> companies obtain information directly from satellites?</p></div>
+                        <div class="multi-choice-option"><label><input type="checkbox" name="q21-22" value="A"> <strong>A</strong> S&eacute;v&eacute;pi</label></div>
+                        <div class="multi-choice-option"><label><input type="checkbox" name="q21-22" value="B"> <strong>B</strong> Infoterra</label></div>
+                        <div class="multi-choice-option"><label><input type="checkbox" name="q21-22" value="C"> <strong>C</strong> Agriculture and Agri-Food Canada</label></div>
+                        <div class="multi-choice-option"><label><input type="checkbox" name="q21-22" value="D"> <strong>D</strong> RapidEye</label></div>
+                        <div class="multi-choice-option"><label><input type="checkbox" name="q21-22" value="E"> <strong>E</strong> World Agroforestry Centre</label></div>
+                    </div>
+                    <div class="question">
+                        <div class="question-prompt"><p><strong>Questions 23&ndash;26</strong> &mdash; Sentence Completion</p><p style="color:var(--text-muted);font-size:0.88rem">Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage.</p></div>
+                        <ul style="list-style:none;padding:0;">
+                            <li style="margin-bottom:1rem"><span class="tf-question-number">23</span> Initially, orbiting satellites are used to measure <input type="text" class="answer-input" id="q23" placeholder="23"> coming from farmland.</li>
+                            <li style="margin-bottom:1rem"><span class="tf-question-number">24</span> <input type="text" class="answer-input" id="q24" placeholder="24"> believes that confusion about irregular weather will cause more farmers to use satellite technology.</li>
+                            <li style="margin-bottom:1rem"><span class="tf-question-number">25</span> As a result of satellite technology, it may become possible to insure against the risk of <input type="text" class="answer-input" id="q25" placeholder="25">.</li>
+                            <li style="margin-bottom:1rem"><span class="tf-question-number">26</span> In Africa, much of the soil suffers from the loss of <input type="text" class="answer-input" id="q26" placeholder="26">.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Part 3 Questions -->
+                <div id="questions-3" class="question-set hidden">
+                    <div class="question">
+                        <div class="question-prompt"><p><strong>Questions 27&ndash;30</strong> &mdash; Multiple Choice</p><p style="color:var(--text-muted);font-size:0.88rem">Choose the correct letter, A, B, C or D.</p></div>
+                        <div class="multi-choice-question"><p><span class="tf-question-number">27</span> In the first paragraph, the writer suggests that a musician who is talented is someone</p><div class="multi-choice-option"><label><input type="radio" name="q27" value="A"> <strong>A</strong> who is aware of being set apart from other people.</label></div><div class="multi-choice-option"><label><input type="radio" name="q27" value="B"> <strong>B</strong> whose brain structure is unlike that of other people.</label></div><div class="multi-choice-option"><label><input type="radio" name="q27" value="C"> <strong>C</strong> who can perform extremely well in early childhood.</label></div><div class="multi-choice-option"><label><input type="radio" name="q27" value="D"> <strong>D</strong> whose essential skills are more varied than those of ordinary people.</label></div></div>
+                        <div class="multi-choice-question"><p><span class="tf-question-number">28</span> According to the writer, what is unclear about the findings of Gottfried Schlaug?</p><div class="multi-choice-option"><label><input type="radio" name="q28" value="A"> <strong>A</strong> which part of the brain is linked to a particular musical skill.</label></div><div class="multi-choice-option"><label><input type="radio" name="q28" value="B"> <strong>B</strong> which type of musical skill leads to the greatest change in the brain.</label></div><div class="multi-choice-option"><label><input type="radio" name="q28" value="C"> <strong>C</strong> whether a feature of the brain is a cause or an effect of a musical skill.</label></div><div class="multi-choice-option"><label><input type="radio" name="q28" value="D"> <strong>D</strong> whether the acquisition of a musical skill is easier for some people than others.</label></div></div>
+                        <div class="multi-choice-question"><p><span class="tf-question-number">29</span> According to the writer, what has been established by studies of violin players?</p><div class="multi-choice-option"><label><input type="radio" name="q29" value="A"> <strong>A</strong> Changes may occur in the brain following violin practice.</label></div><div class="multi-choice-option"><label><input type="radio" name="q29" value="B"> <strong>B</strong> Left-handed violinists have a different brain structure from other people.</label></div><div class="multi-choice-option"><label><input type="radio" name="q29" value="C"> <strong>C</strong> A violinist&rsquo;s hand size is not due to practice but to genetic factors.</label></div><div class="multi-choice-option"><label><input type="radio" name="q29" value="D"> <strong>D</strong> Violinists are born with brains that have a particular structure.</label></div></div>
+                        <div class="multi-choice-question"><p><span class="tf-question-number">30</span> According to the writer, findings on the amount of practice done by expert musicians suggest that</p><div class="multi-choice-option"><label><input type="radio" name="q30" value="A"> <strong>A</strong> talent may have little to do with expertise.</label></div><div class="multi-choice-option"><label><input type="radio" name="q30" value="B"> <strong>B</strong> practice may actually prevent the development of talent.</label></div><div class="multi-choice-option"><label><input type="radio" name="q30" value="C"> <strong>C</strong> talent may not be recognised by teachers.</label></div><div class="multi-choice-option"><label><input type="radio" name="q30" value="D"> <strong>D</strong> expertise may be related to quality of instruction.</label></div></div>
+                    </div>
+                    <div class="question">
+                        <div class="question-prompt"><p><strong>Questions 31&ndash;36</strong> &mdash; Yes / No / Not Given</p><p style="color:var(--text-muted);font-size:0.88rem">Do the following statements agree with the claims of the writer?</p><ul><li><strong>YES</strong> &ndash; agrees with the claims</li><li><strong>NO</strong> &ndash; contradicts the claims</li><li><strong>NOT GIVEN</strong> &ndash; impossible to say</li></ul></div>
+                        <div class="tf-question" data-q="31"><div class="tf-question-line"><span class="tf-question-number">31</span> Anders Ericsson's work with cognitive psychology has influenced other researchers.</div><div class="tf-options"><label class="tf-option"><input type="radio" name="q31" value="YES"> YES</label><label class="tf-option"><input type="radio" name="q31" value="NO"> NO</label><label class="tf-option"><input type="radio" name="q31" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="32"><div class="tf-question-line"><span class="tf-question-number">32</span> Different areas of expertise seem to have one specific thing in common.</div><div class="tf-options"><label class="tf-option"><input type="radio" name="q32" value="YES"> YES</label><label class="tf-option"><input type="radio" name="q32" value="NO"> NO</label><label class="tf-option"><input type="radio" name="q32" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="33"><div class="tf-question-line"><span class="tf-question-number">33</span> In order to be useful, practice must be carried out regularly every day.</div><div class="tf-options"><label class="tf-option"><input type="radio" name="q33" value="YES"> YES</label><label class="tf-option"><input type="radio" name="q33" value="NO"> NO</label><label class="tf-option"><input type="radio" name="q33" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="34"><div class="tf-question-line"><span class="tf-question-number">34</span> Anyone who practices for long enough can reach the level of a world-class expert.</div><div class="tf-options"><label class="tf-option"><input type="radio" name="q34" value="YES"> YES</label><label class="tf-option"><input type="radio" name="q34" value="NO"> NO</label><label class="tf-option"><input type="radio" name="q34" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="35"><div class="tf-question-line"><span class="tf-question-number">35</span> Occasionally, someone can become an expert at global level with fewer than 10,000 hours' practice.</div><div class="tf-options"><label class="tf-option"><input type="radio" name="q35" value="YES"> YES</label><label class="tf-option"><input type="radio" name="q35" value="NO"> NO</label><label class="tf-option"><input type="radio" name="q35" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                        <div class="tf-question" data-q="36"><div class="tf-question-line"><span class="tf-question-number">36</span> Existing knowledge of learning and cognitive skills supports the importance of practice.</div><div class="tf-options"><label class="tf-option"><input type="radio" name="q36" value="YES"> YES</label><label class="tf-option"><input type="radio" name="q36" value="NO"> NO</label><label class="tf-option"><input type="radio" name="q36" value="NOT GIVEN"> NOT GIVEN</label></div></div>
+                    </div>
+                    <div class="question">
+                        <div class="question-prompt">
+                            <p><strong>Questions 37&ndash;40</strong> &mdash; Summary Completion</p>
+                            <p style="color:var(--text-muted);font-size:0.88rem">Complete the summary using the list of words, A&ndash;J, below.</p>
+                            <p style="color:var(--accent-light);font-weight:600">Mozart</p>
+                            <p>The case of Mozart could be quoted as evidence against the 10,000-hour-practice theory. However, the writer points out that the young Mozart received a lot of <input type="text" class="answer-input" id="q37" placeholder="37" style="width:55px"> from his father, and that the symphony he wrote at the age of <input type="text" class="answer-input" id="q38" placeholder="38" style="width:55px"> was not <input type="text" class="answer-input" id="q39" placeholder="39" style="width:55px"> and may be of only academic interest. The case therefore supports the view that expertise is not solely the result of <input type="text" class="answer-input" id="q40" placeholder="40" style="width:55px"> characteristics.</p>
+                            <div style="background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;padding:0.75rem;margin-top:1rem;font-size:0.9rem;color:var(--text-secondary)"><strong style="color:var(--accent-light)">Word List:</strong> A. popular &nbsp; B. artistic &nbsp; C. completed &nbsp; D. eight &nbsp; E. tuition &nbsp; F. encouragement &nbsp; G. inherited &nbsp; H. four &nbsp; I. practice &nbsp; J. two</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nav arrows -->
+    <div class="nav-arrows">
+        <button class="nav-arrow" onclick="previousQuestion()" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+        <button class="nav-arrow" onclick="nextQuestion()" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="nav-row">
+        <div class="part-nav-wrapper" id="pnav-1"><button class="part-nav-btn" onclick="switchToPart(1)">Part 1 <span class="attempted-count" id="ac-1">0/13</span></button><div class="sub-nav" id="sn-1"></div></div>
+        <div class="part-nav-wrapper" id="pnav-2"><button class="part-nav-btn" onclick="switchToPart(2)">Part 2 <span class="attempted-count" id="ac-2">0/13</span></button><div class="sub-nav" id="sn-2"></div></div>
+        <div class="part-nav-wrapper" id="pnav-3"><button class="part-nav-btn" onclick="switchToPart(3)">Part 3 <span class="attempted-count" id="ac-3">0/14</span></button><div class="sub-nav" id="sn-3"></div></div>
+        <button class="check-btn" id="deliver-button"><i class="fas fa-check-circle"></i> Check Answers</button>
+    </nav>
+
+    <!-- Results Modal -->
+    <div id="results-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="position:relative;">
+            <button class="modal-close" onclick="closeResultsModal()">&times;</button>
+            <h2><i class="fas fa-chart-bar me-2" style="color:var(--accent-light)"></i>Results</h2>
+            <div class="results-summary"><p>Score: <span id="results-score" class="score-val"></span> / 40</p><p>Band: <span id="results-band" class="band-val"></span></p></div>
+            <div id="results-details" class="results-details"></div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let currentPassage = 1, currentQuestion = 1, timeInSeconds = 3600, timerInterval;
+        const timerEl = document.getElementById('timer-display');
+        const timerBadge = document.getElementById('timer-badge');
+        const partRanges = {1:[1,13], 2:[14,26], 3:[27,40]};
+
+        const correctAnswers = {
+            '1':'FALSE','2':'NOT GIVEN','3':'TRUE','4':'FALSE','5':'FALSE','6':'TRUE',
+            '7':'1906','8':'Australia','9':'family','10':'bankruptcy','11':'writers','12':'reputation','13':'husband',
+            '14':'C','15':'D','16':'E','17':'G','18':'D','19':'F','20':'B','21':'B','22':'D',
+            '23':'electromagnetic radiation','24':'Henri Douche','25':'crop failure','26':'nutrients',
+            '27':'C','28':'C','29':'A','30':'A',
+            '31':'NOT GIVEN','32':'YES','33':'NOT GIVEN','34':'NO','35':'NO','36':'YES',
+            '37':'E','38':'D','39':'A','40':'G'
+        };
+
+        // Build nav
+        for (let p = 1; p <= 3; p++) {
+            const c = document.getElementById(`sn-${p}`);
+            for (let i = partRanges[p][0]; i <= partRanges[p][1]; i++) {
+                const b = document.createElement('button');
+                b.className = 'q-btn'; b.textContent = i; b.onclick = () => goToQuestion(i);
+                c.appendChild(b);
+            }
+        }
+
+        // Timer
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeInSeconds--;
+                const m = Math.floor(timeInSeconds/60), s = timeInSeconds%60;
+                timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                timerBadge.classList.toggle('warning', timeInSeconds <= 300 && timeInSeconds > 60);
+                timerBadge.classList.toggle('danger', timeInSeconds <= 60);
+                if (timeInSeconds <= 0) { clearInterval(timerInterval); timerEl.textContent = "Time's up!"; }
+            }, 1000);
+        }
+        startTimer();
+
+        let paused = false;
+        document.getElementById('timer-toggle').onclick = () => {
+            if (paused) { startTimer(); paused = false; } else { clearInterval(timerInterval); paused = true; }
+        };
+        document.getElementById('timer-reset').onclick = () => { timeInSeconds = 3600; startTimer(); paused = false; };
+
+        // Navigation
+        function getBtn(q) { let p = q<=13?1:q<=26?2:3; return document.querySelector(`#sn-${p} .q-btn:nth-child(${q-partRanges[p][0]+1})`); }
+
+        function switchToPart(p, goQ) {
+            currentPassage = p;
+            document.querySelectorAll('.reading-passage,.question-set,.part-header-bar').forEach(e => e.classList.add('hidden'));
+            document.getElementById(`passage-${p}`).classList.remove('hidden');
+            document.getElementById(`questions-${p}`).classList.remove('hidden');
+            document.getElementById(`part-header-${p}`).classList.remove('hidden');
+            document.querySelectorAll('.part-nav-wrapper').forEach((w,i) => w.classList.toggle('selected', i+1===p));
+            goToQuestion(goQ || partRanges[p][0]);
+        }
+
+        function goToQuestion(q) {
+            currentQuestion = q;
+            let p = q<=13?1:q<=26?2:3;
+            if (currentPassage !== p) { switchToPart(p, q); return; }
+            document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+            const btn = getBtn(q); if (btn) btn.classList.add('active');
+            const el = document.getElementById(`q${q}`) || document.querySelector(`[data-q="${q}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        window.nextQuestion = () => currentQuestion < 40 && goToQuestion(currentQuestion+1);
+        window.previousQuestion = () => currentQuestion > 1 && goToQuestion(currentQuestion-1);
+        window.switchToPart = switchToPart;
+
+        // Indicators
+        function isAnswered(q) {
+            if (q===21||q===22) return document.querySelectorAll('input[name="q21-22"]:checked').length > 0;
+            const t = document.getElementById(`q${q}`); if (t && t.value.trim()) return true;
+            return !!document.querySelector(`input[name="q${q}"]:checked`);
+        }
+        function updateIndicators() {
+            for (let p = 1; p <= 3; p++) {
+                let c = 0;
+                for (let i = partRanges[p][0]; i <= partRanges[p][1]; i++) {
+                    const b = getBtn(i);
+                    if (!b || b.classList.contains('correct') || b.classList.contains('incorrect')) { if(isAnswered(i))c++; continue; }
+                    if (isAnswered(i)) { b.classList.add('answered'); c++; } else b.classList.remove('answered');
+                }
+                document.getElementById(`ac-${p}`).textContent = `${c}/${partRanges[p][1]-partRanges[p][0]+1}`;
+            }
+        }
+        document.body.addEventListener('input', updateIndicators);
+        document.body.addEventListener('change', updateIndicators);
+
+        // Checkbox limit
+        document.querySelectorAll('input[name="q21-22"]').forEach(cb => {
+            cb.addEventListener('change', () => { if (document.querySelectorAll('input[name="q21-22"]:checked').length > 2) cb.checked = false; });
+        });
+
+        // Check answers
+        document.getElementById('deliver-button').addEventListener('click', () => {
+            document.querySelectorAll('input').forEach(i => i.disabled = true);
+            document.getElementById('deliver-button').disabled = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            const det = document.getElementById('results-details'); det.innerHTML = '';
+
+            for (let i = 1; i <= 40; i++) {
+                const correct = correctAnswers[String(i)];
+                let uAns = '', ok = false;
+
+                if (i===21||i===22) {
+                    if (i===22) { det.innerHTML += `<div class="result-row"><span class="q-num">22</span><span class="user-ans">See Q21</span><span class="correct-ans">D</span></div>`; continue; }
+                    const checked = Array.from(document.querySelectorAll('input[name="q21-22"]:checked')).map(c=>c.value).sort();
+                    uAns = checked.join(', ') || '--'; ok = checked.length===2 && checked.includes('B') && checked.includes('D');
+                    if (ok) score += 2;
+                    document.querySelectorAll('input[name="q21-22"]:checked').forEach(c => c.closest('.multi-choice-option').classList.add(['B','D'].includes(c.value)?'correct':'incorrect'));
+                    if (!ok) ['B','D'].forEach(v => { const e = document.querySelector(`input[name="q21-22"][value="${v}"]`); if(e&&!e.checked) e.closest('.multi-choice-option').classList.add('correct-answer-highlight'); });
+                    [getBtn(21),getBtn(22)].forEach(b => { if(b) b.classList.add(ok?'correct':'incorrect'); });
+                    det.innerHTML += `<div class="result-row ${ok?'':'incorrect'}"><span class="q-num">21-22</span><span class="user-ans">${uAns}</span><span class="correct-ans">B, D</span></div>`;
+                    continue;
+                }
+
+                const txt = document.getElementById(`q${i}`);
+                const radios = document.querySelectorAll(`input[name="q${i}"][type="radio"]`);
+                if (txt) { uAns = txt.value.trim(); ok = uAns.toLowerCase() === correct.toLowerCase(); txt.classList.add(ok?'correct':'incorrect'); if(!ok){const s=document.createElement('span');s.className='correct-answer-display';s.innerHTML=` &rarr; ${correct}`;txt.after(s);} }
+                else if (radios.length) { const ch = document.querySelector(`input[name="q${i}"]:checked`); if(ch){uAns=ch.value;ok=uAns===correct;ch.closest('.tf-option,.multi-choice-option')?.classList.add(ok?'correct':'incorrect');} if(!ok){const ct=radios[0].closest('.tf-question,.multi-choice-question');if(ct){const ce=ct.querySelector(`input[value="${correct}"]`);ce?.closest('.tf-option,.multi-choice-option')?.classList.add('correct-answer-highlight');}}}
+                if (ok) score++;
+                const nb = getBtn(i); if(nb) nb.classList.add(ok?'correct':'incorrect');
+                det.innerHTML += `<div class="result-row ${ok?'':'incorrect'}"><span class="q-num">${i}</span><span class="user-ans">${uAns||'--'}</span><span class="correct-ans">${correct}</span></div>`;
+            }
+
+            document.getElementById('results-score').textContent = score;
+            const bm = {40:9,39:9,38:8.5,37:8.5,36:8,35:8,34:7.5,33:7.5,32:7,31:7,30:7,29:6.5,28:6.5,27:6.5,26:6,25:6,24:6,23:5.5,22:5.5,21:5.5,20:5.5,19:5,18:5,17:5,16:5,15:5,14:4.5,13:4.5,12:4,11:4,10:4,9:3.5,8:3.5,7:3,6:3,5:2.5,4:2.5};
+            document.getElementById('results-band').textContent = score<=0?'0':score<=3?'2.0':bm[score]||'0';
+            document.getElementById('results-modal').classList.remove('hidden');
+        });
+        window.closeResultsModal = () => document.getElementById('results-modal').classList.add('hidden');
+
+        // Resizer
+        const resizer = document.getElementById('resizer'), pp = document.getElementById('passage-panel');
+        resizer.addEventListener('mousedown', e => {
+            e.preventDefault(); const sx = e.clientX, sw = pp.offsetWidth;
+            const mv = e => { const w = sw+e.clientX-sx; if(w>200&&(document.body.clientWidth-w-6)>200) pp.style.flex=`0 0 ${w}px`; };
+            const up = () => { window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); };
+            window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up);
+        });
+
+        // Highlighting
+        let savedHlRange = null;
+        document.addEventListener('mouseup', e => {
+            if (e.target.closest('.hl-float')) return; // don't remove if clicking the button
+            document.querySelectorAll('.hl-float').forEach(b=>b.remove());
+            savedHlRange = null;
+            setTimeout(()=>{
+                const sel=window.getSelection();
+                if(sel&&!sel.isCollapsed&&sel.toString().trim()){
+                    const r=sel.getRangeAt(0), n=r.commonAncestorContainer.nodeType===3?r.commonAncestorContainer.parentElement:r.commonAncestorContainer;
+                    if(n&&(n.closest('#passage-panel')||n.closest('#questions-panel'))){
+                        savedHlRange = r.cloneRange();
+                        const b=document.createElement('button');b.className='hl-float';b.textContent='Highlight';
+                        b.style.cssText='position:absolute;z-index:9999;background:rgba(245,158,11,0.8);color:#000;border:none;padding:3px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;';
+                        const rect=r.getBoundingClientRect();b.style.left=`${window.scrollX+rect.left}px`;b.style.top=`${window.scrollY+rect.top-28}px`;
+                        document.body.appendChild(b);
+                        b.addEventListener('mousedown', (ev)=>{
+                            ev.preventDefault(); ev.stopPropagation();
+                            if(savedHlRange){
+                                const sel2=window.getSelection(); sel2.removeAllRanges(); sel2.addRange(savedHlRange);
+                                const s=document.createElement('span');s.className='highlight';
+                                try{savedHlRange.surroundContents(s);}catch(err){const f=savedHlRange.extractContents();s.appendChild(f);savedHlRange.insertNode(s);}
+                                sel2.removeAllRanges();
+                            }
+                            b.remove(); savedHlRange=null;
+                        });
+                    }
+                }
+            },10);
+        });
+        document.addEventListener('click',e=>{if(e.target.closest('.hl-float'))return;const h=e.target.closest('.highlight');if(h&&!window.getSelection().toString().trim()){const p=h.parentNode;while(h.firstChild)p.insertBefore(h.firstChild,h);p.removeChild(h);p.normalize();}});
+        document.addEventListener('scroll',()=>{document.querySelectorAll('.hl-float').forEach(b=>b.remove());savedHlRange=null;},true);
+
+        switchToPart(1);
+    });
+    </script>
+</body>
+</html>

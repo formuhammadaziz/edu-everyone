@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Listening Tests - EduEveryone{% endblock %}
+
+{% block content %}
+<div class="mb-4 fade-in-up">
+    <h2 class="fw-bold mb-1"><i class="fas fa-headphones me-2" style="color:#10b981"></i>Listening Tests</h2>
+    <p class="text-muted mb-0">Choose a full listening practice test</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3"
+                         style="width:48px;height:48px;background:rgba(16,185,129,0.1);">
+                        <i class="fas fa-headphones" style="color:#10b981;font-size:1.2rem"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold">Listening Test 1</h5>
+                        <small class="text-muted">CDI Ruddick</small>
+                    </div>
+                </div>
+                <p class="card-text small" style="color:var(--text-secondary)">
+                    Customer complaint, red squirrel photography, whale survey, and telescope development.
+                </p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge bg-light"><i class="fas fa-list-ol me-1"></i>40 questions</span>
+                    <span class="badge bg-light"><i class="fas fa-clock me-1"></i>40 min</span>
+                    <span class="badge bg-light"><i class="fas fa-layer-group me-1"></i>4 parts</span>
+                </div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);">
+                <a href="{% url 'exams:practice_listening' %}" class="btn btn-success w-100">
+                    <i class="fas fa-play me-1"></i>Start Test
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placeholder for future tests -->
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100" style="opacity:0.5;pointer-events:none;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3"
+                         style="width:48px;height:48px;background:rgba(16,185,129,0.06);">
+                        <i class="fas fa-headphones" style="color:var(--text-muted);font-size:1.2rem"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold">Listening Test 2</h5>
+                        <small class="text-muted">Coming Soon</small>
+                    </div>
+                </div>
+                <p class="card-text small" style="color:var(--text-muted)">New listening practice test will be available soon.</p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge bg-light"><i class="fas fa-lock me-1"></i>Locked</span>
+                </div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);">
+                <button class="btn btn-outline-secondary w-100" disabled><i class="fas fa-lock me-1"></i>Coming Soon</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="card exam-card h-100" style="opacity:0.5;pointer-events:none;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 me-3"
+                         style="width:48px;height:48px;background:rgba(16,185,129,0.06);">
+                        <i class="fas fa-headphones" style="color:var(--text-muted);font-size:1.2rem"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold">Listening Test 3</h5>
+                        <small class="text-muted">Coming Soon</small>
+                    </div>
+                </div>
+                <p class="card-text small" style="color:var(--text-muted)">New listening practice test will be available soon.</p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge bg-light"><i class="fas fa-lock me-1"></i>Locked</span>
+                </div>
+            </div>
+            <div class="card-footer p-3" style="background:transparent;border-top:1px solid var(--border-color);">
+                <button class="btn btn-outline-secondary w-100" disabled><i class="fas fa-lock me-1"></i>Coming Soon</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

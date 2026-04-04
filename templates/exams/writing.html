@@ -1,0 +1,115 @@
+{% extends "exam_base.html" %}
+{% load static %}
+
+{% block title %}Writing - IELTS Exam{% endblock %}
+{% block section_icon %}pen{% endblock %}
+{% block section_name %}Writing{% endblock %}
+
+{% block content %}
+<input type="hidden" id="remaining-seconds" value="{{ remaining_seconds }}">
+<input type="hidden" id="attempt-id" value="{{ attempt.id }}">
+
+<form method="post" id="exam-submit-form" action="{% url 'exams:submit_section' attempt.id 'writing' %}">
+    {% csrf_token %}
+</form>
+
+<div class="container-fluid h-100" style="overflow-y:auto; max-height:calc(100vh - 60px); padding-bottom: 2rem;">
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#task1" type="button">
+                <i class="fas fa-chart-bar me-1"></i>Task 1 <span class="badge ms-1" style="background:var(--exam-glow);color:var(--accent-light);font-size:0.7rem">150+ words</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#task2" type="button">
+                <i class="fas fa-pen-fancy me-1"></i>Task 2 <span class="badge ms-1" style="background:var(--exam-glow);color:var(--accent-light);font-size:0.7rem">250+ words</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Task 1 -->
+        <div class="tab-pane fade show active" id="task1">
+            {% for q in questions %}
+            {% if q.question_type == 'essay_task1' %}
+            <div class="question-card" data-question-id="{{ q.id }}">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="question-number">1</span>
+                    <h6 class="mb-0 fw-bold">Writing Task 1</h6>
+                </div>
+                <p class="mb-3 question-text">{{ q.question_text }}</p>
+                {% if q.image %}
+                <div class="text-center mb-3 p-3 rounded-3" style="background:var(--exam-input);">
+                    <img src="{{ q.image.url }}" alt="Task 1" class="img-fluid rounded" style="max-height:350px;">
+                </div>
+                {% endif %}
+                <textarea class="writing-textarea" data-question-id="{{ q.id }}" data-min-words="150"
+                          placeholder="Write your response here..." rows="15">{{ existing|default:'' }}</textarea>
+                <div class="mt-2 d-flex justify-content-between align-items-center">
+                    <span class="word-counter under" data-for="{{ q.id }}">
+                        <i class="fas fa-pencil-alt"></i> Words: 0 / 150
+                    </span>
+                    <small style="color:var(--exam-muted)"><i class="fas fa-info-circle me-1"></i>Write at least 150 words</small>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Task 2 -->
+        <div class="tab-pane fade" id="task2">
+            {% for q in questions %}
+            {% if q.question_type == 'essay_task2' %}
+            <div class="question-card" data-question-id="{{ q.id }}">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="question-number">2</span>
+                    <h6 class="mb-0 fw-bold">Writing Task 2</h6>
+                </div>
+                <p class="mb-3 question-text">{{ q.question_text }}</p>
+                <textarea class="writing-textarea" data-question-id="{{ q.id }}" data-min-words="250"
+                          placeholder="Write your essay here..." rows="20">{{ existing|default:'' }}</textarea>
+                <div class="mt-2 d-flex justify-content-between align-items-center">
+                    <span class="word-counter under" data-for="{{ q.id }}">
+                        <i class="fas fa-pencil-alt"></i> Words: 0 / 250
+                    </span>
+                    <small style="color:var(--exam-muted)"><i class="fas fa-info-circle me-1"></i>Write at least 250 words</small>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.writing-textarea').forEach(textarea => {
+        const qId = textarea.dataset.questionId;
+        const minWords = parseInt(textarea.dataset.minWords) || 150;
+        const counter = document.querySelector(`.word-counter[data-for="${qId}"]`);
+
+        function updateCount() {
+            const text = textarea.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            if (counter) {
+                counter.innerHTML = `<i class="fas fa-pencil-alt"></i> Words: ${words} / ${minWords}`;
+                counter.className = words >= minWords ? 'word-counter met' : 'word-counter under';
+            }
+            let input = document.querySelector(`#exam-submit-form input[name="question_${qId}"]`);
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `question_${qId}`;
+                document.getElementById('exam-submit-form').appendChild(input);
+            }
+            input.value = textarea.value;
+        }
+
+        textarea.addEventListener('input', updateCount);
+        updateCount();
+    });
+});
+</script>
+{% endblock %}

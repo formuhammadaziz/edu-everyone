@@ -1,0 +1,162 @@
+{% extends "exam_base.html" %}
+{% load static %}
+
+{% block title %}Reading - IELTS Exam{% endblock %}
+{% block section_icon %}book{% endblock %}
+{% block section_name %}Reading{% endblock %}
+
+{% block content %}
+<input type="hidden" id="remaining-seconds" value="{{ remaining_seconds }}">
+<input type="hidden" id="attempt-id" value="{{ attempt.id }}">
+
+<form method="post" id="exam-submit-form" action="{% url 'exams:submit_section' attempt.id 'reading' %}">
+    {% csrf_token %}
+</form>
+
+<div class="reading-split">
+    <!-- Passages -->
+    <div class="reading-passage-panel">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="fas fa-book" style="color:var(--accent-light)"></i>
+            <h6 class="mb-0 fw-bold" style="color:var(--accent-light)">Reading Passages</h6>
+        </div>
+        {% for passage in passages %}
+        <div class="mb-4" id="passage-{{ passage.id }}">
+            <h6 class="passage-title mb-2">
+                <span class="badge me-2" style="background:var(--exam-glow);color:var(--accent-light)">{{ passage.order }}</span>
+                {{ passage.title }}
+            </h6>
+            <div class="passage-text">{{ passage.content|linebreaksbr }}</div>
+        </div>
+        {% if not forloop.last %}<hr style="border-color:var(--exam-border)">{% endif %}
+        {% empty %}
+        <p style="color:var(--exam-muted)">No passages available.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Questions -->
+    <div class="reading-questions-panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-question-circle" style="color:var(--accent-light)"></i>
+                <h6 class="mb-0 fw-bold" style="color:var(--accent-light)">Questions</h6>
+            </div>
+            <div class="question-nav" style="padding:0.4rem;">
+                {% for q in questions %}
+                <a href="#q-{{ q.id }}" class="q-dot {% if q.id|stringformat:'d' in existing %}answered{% endif %}"
+                   data-q="{{ q.id }}">{{ q.question_number }}</a>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% for q in questions %}
+        <div class="question-card" data-question-id="{{ q.id }}" id="q-{{ q.id }}">
+            <div class="d-flex align-items-start">
+                <span class="question-number">{{ q.question_number }}</span>
+                <div class="flex-grow-1">
+                    <p class="mb-2 question-text">{{ q.question_text }}</p>
+
+                    {% if q.question_type == 'multiple_choice' %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="A" id="q{{ q.id }}_a">
+                        <label class="form-check-label" for="q{{ q.id }}_a">A) {{ q.option_a }}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="B" id="q{{ q.id }}_b">
+                        <label class="form-check-label" for="q{{ q.id }}_b">B) {{ q.option_b }}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="C" id="q{{ q.id }}_c">
+                        <label class="form-check-label" for="q{{ q.id }}_c">C) {{ q.option_c }}</label>
+                    </div>
+                    {% if q.option_d %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="D" id="q{{ q.id }}_d">
+                        <label class="form-check-label" for="q{{ q.id }}_d">D) {{ q.option_d }}</label>
+                    </div>
+                    {% endif %}
+
+                    {% elif q.question_type == 'true_false_ng' %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="True" id="q{{ q.id }}_t">
+                        <label class="form-check-label" for="q{{ q.id }}_t">True</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="False" id="q{{ q.id }}_f">
+                        <label class="form-check-label" for="q{{ q.id }}_f">False</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="Not Given" id="q{{ q.id }}_ng">
+                        <label class="form-check-label" for="q{{ q.id }}_ng">Not Given</label>
+                    </div>
+
+                    {% elif q.question_type == 'yes_no_ng' %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="Yes" id="q{{ q.id }}_y">
+                        <label class="form-check-label" for="q{{ q.id }}_y">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="No" id="q{{ q.id }}_n">
+                        <label class="form-check-label" for="q{{ q.id }}_n">No</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q_{{ q.id }}"
+                               data-question-id="{{ q.id }}" value="Not Given" id="q{{ q.id }}_ng">
+                        <label class="form-check-label" for="q{{ q.id }}_ng">Not Given</label>
+                    </div>
+
+                    {% elif q.question_type == 'matching' or q.question_type == 'sentence_completion' or q.question_type == 'fill_blank' %}
+                    <input type="text" class="fill-blank-input"
+                           data-question-id="{{ q.id }}" placeholder="Type your answer..."
+                           value="{{ existing|default:'' }}">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const qId = this.dataset.questionId;
+            let input = document.querySelector(`#exam-submit-form input[name="question_${qId}"]`);
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `question_${qId}`;
+                document.getElementById('exam-submit-form').appendChild(input);
+            }
+            input.value = this.value;
+        });
+    });
+
+    document.querySelectorAll('.fill-blank-input').forEach(el => {
+        el.addEventListener('input', function() {
+            const qId = this.dataset.questionId;
+            let input = document.querySelector(`#exam-submit-form input[name="question_${qId}"]`);
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `question_${qId}`;
+                document.getElementById('exam-submit-form').appendChild(input);
+            }
+            input.value = this.value;
+        });
+    });
+});
+</script>
+{% endblock %}
