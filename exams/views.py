@@ -557,6 +557,16 @@ Please evaluate this essay."""
     if error:
         return JsonResponse({"error": error})
 
+    from results.models import WritingCheckResult
+    WritingCheckResult.objects.create(
+        user=request.user,
+        task_type=task_type,
+        task_prompt=task_prompt,
+        essay=essay,
+        feedback=text,
+        word_count=word_count,
+    )
+
     return JsonResponse({"feedback": text, "word_count": word_count})
 
 

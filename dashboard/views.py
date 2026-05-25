@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
-from results.models import ExamResult
+from results.models import ExamResult, WritingCheckResult
 
 
 @login_required
@@ -26,6 +26,8 @@ def home(request):
         chart_listening.append(float(r.listening_score) if r.listening_score else 0)
         chart_reading.append(float(r.reading_score) if r.reading_score else 0)
 
+    writing_check_count = WritingCheckResult.objects.filter(user=user).count()
+
     context = {
         'recent_results': recent_results,
         'best_band': best_band,
@@ -33,5 +35,6 @@ def home(request):
         'chart_overall': json.dumps(chart_overall),
         'chart_listening': json.dumps(chart_listening),
         'chart_reading': json.dumps(chart_reading),
+        'writing_check_count': writing_check_count,
     }
     return render(request, 'dashboard/home.html', context)

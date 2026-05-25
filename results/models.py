@@ -34,3 +34,19 @@ class ExamResult(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class WritingCheckResult(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='writing_checks')
+    task_type = models.CharField(max_length=20)
+    task_prompt = models.TextField(blank=True)
+    essay = models.TextField()
+    feedback = models.TextField()
+    word_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} - {self.task_type} - {self.created_at.date()}"

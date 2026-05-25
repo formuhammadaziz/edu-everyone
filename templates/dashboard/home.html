@@ -28,7 +28,10 @@
                 <i class="fas fa-chart-line"></i>
             </div>
             <h6 class="fw-bold">My Progress</h6>
-            <p class="small text-muted mb-0">{{ recent_results|length }} exam{{ recent_results|length|pluralize }} completed</p>
+            <p class="small text-muted mb-0">
+                {{ recent_results|length }} exam{{ recent_results|length|pluralize }} &middot;
+                {{ writing_check_count }} writing check{{ writing_check_count|pluralize }}
+            </p>
         </div>
     </div>
 

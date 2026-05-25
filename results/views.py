@@ -62,5 +62,7 @@ def result_detail(request, attempt_id):
 
 @login_required
 def result_list(request):
+    from .models import WritingCheckResult
     results = ExamResult.objects.filter(user=request.user)
-    return render(request, 'results/list.html', {'results': results})
+    writing_checks = WritingCheckResult.objects.filter(user=request.user)
+    return render(request, 'results/list.html', {'results': results, 'writing_checks': writing_checks})
