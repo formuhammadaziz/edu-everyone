@@ -69,8 +69,8 @@ DATABASES = {
     }
 }
 
-_db_url = os.getenv("DATABASE_URL", "").strip()
-if _db_url:
+_db_url = os.getenv("DATABASE_URL", "").strip().strip('"\'').strip()
+if _db_url and "://" in _db_url:
     DATABASES["default"] = dj_database_url.parse(_db_url, conn_max_age=600, ssl_require=False)
 
 AUTH_PASSWORD_VALIDATORS = [
