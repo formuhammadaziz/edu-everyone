@@ -18,4 +18,4 @@ RUN env -u DATABASE_URL SECRET_KEY=build-phase-dummy-key python manage.py collec
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn ielts_platform.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn ielts_platform.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"]
