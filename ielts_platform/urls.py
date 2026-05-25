@@ -8,6 +8,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", lambda request: redirect('dashboard:home')),
     path("accounts/", include("allauth.socialaccount.urls")),
+    path("accounts/", include("allauth.socialaccount.providers.google.urls")),
     path("accounts/", include("accounts.urls")),
     path("exams/", include("exams.urls")),
     path("results/", include("results.urls")),
