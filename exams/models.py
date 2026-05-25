@@ -2,6 +2,37 @@ from django.db import models
 from django.conf import settings
 
 
+class Course(models.Model):
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('listening', 'Listening'),
+        ('reading', 'Reading'),
+        ('writing', 'Writing'),
+        ('speaking', 'Speaking'),
+    ]
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    youtube_url = models.URLField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'title']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def thumbnail(self):
+        if 'watch?v=' in self.youtube_url:
+            video_id = self.youtube_url.split('watch?v=')[1].split('&')[0]
+            return f'https://img.youtube.com/vi/{video_id}/hqdefault.jpg'
+        if 'youtu.be/' in self.youtube_url:
+            video_id = self.youtube_url.split('youtu.be/')[1].split('?')[0]
+            return f'https://img.youtube.com/vi/{video_id}/hqdefault.jpg'
+        return ''
+
+
 class ExamSet(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)

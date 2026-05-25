@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import ExamSet, Section, ReadingPassage, Question, ExamAttempt, StudentResponse
+from .models import Course, ExamSet, Section, ReadingPassage, Question, ExamAttempt, StudentResponse
+
+
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'order')
+    list_filter = ('category',)
+    list_editable = ('order',)
+    search_fields = ('title',)
 
 
 class SectionInline(admin.StackedInline):

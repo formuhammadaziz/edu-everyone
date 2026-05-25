@@ -413,7 +413,9 @@ ARTICLES = {
 
 @login_required
 def exam_list(request):
-    return render(request, 'exams/exam_list.html')
+    from .models import Course
+    courses = Course.objects.all()
+    return render(request, 'exams/exam_list.html', {'courses': courses})
 
 
 @login_required
