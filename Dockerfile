@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN SECRET_KEY=build-phase-dummy-key python manage.py collectstatic --noinput
+RUN env -u DATABASE_URL SECRET_KEY=build-phase-dummy-key python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
