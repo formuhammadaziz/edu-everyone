@@ -69,8 +69,9 @@ DATABASES = {
     }
 }
 
-if os.getenv("DATABASE_URL"):
-    DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=False)
+_db_url = os.getenv("DATABASE_URL", "").strip()
+if _db_url:
+    DATABASES["default"] = dj_database_url.parse(_db_url, conn_max_age=600, ssl_require=False)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
