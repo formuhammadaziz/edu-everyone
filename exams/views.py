@@ -1,6 +1,5 @@
 import json
-import urllib.request
-import urllib.error
+from openai import AzureOpenAI
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, Http404
@@ -447,47 +446,41 @@ def ai_assistant(request):
     return render(request, 'exams/ai/assistant.html')
 
 
-def _call_gemini(prompt, system_instruction=""):
-    api_key = settings.GEMINI_API_KEY
-    if not api_key:
-        return None, "Gemini API key not configured. Set GEMINI_API_KEY environment variable."
+def _call_azure_openai(prompt, system_instruction=""):
+    api_key = settings.AZURE_OPENAI_API_KEY
+    endpoint = settings.AZURE_OPENAI_ENDPOINT
+    if not api_key or not endpoint:
+        return None, "Azure OpenAI not configured. Set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT in .env file."
 
-    model = settings.GEMINI_MODEL
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    client = AzureOpenAI(
+        api_key=api_key,
+        api_version=settings.AZURE_OPENAI_API_VERSION,
+        azure_endpoint=endpoint,
+    )
 
-    body = {
-        "contents": [{"parts": [{"text": prompt}]}],
-    }
+    messages = []
     if system_instruction:
-        body["systemInstruction"] = {"parts": [{"text": system_instruction}]}
-
-    data = json.dumps(body).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        messages.append({"role": "system", "content": system_instruction})
+    messages.append({"role": "user", "content": prompt})
 
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-            text = result["candidates"][0]["content"]["parts"][0]["text"]
-            return text, None
-    except urllib.error.HTTPError as e:
-        error_body = ""
-        try:
-            error_body = e.read().decode("utf-8")
-            error_json = json.loads(error_body)
-            error_msg = error_json.get("error", {}).get("message", "")
-        except Exception:
-            error_msg = ""
-
-        if e.code == 400 and "API_KEY_INVALID" in error_body:
-            return None, "API key is invalid. Please check your GEMINI_API_KEY in .env file."
-        elif e.code == 429:
-            return None, "Rate limit reached. Please wait a moment and try again."
-        elif e.code == 403:
-            return None, "API key does not have permission. Enable the Generative Language API in Google Cloud Console."
-        else:
-            return None, error_msg or f"AI service error ({e.code}). Please try again later."
+        response = client.chat.completions.create(
+            model=settings.AZURE_OPENAI_DEPLOYMENT_NAME,
+            messages=messages,
+            max_tokens=2000,
+            temperature=0.7,
+        )
+        return response.choices[0].message.content, None
     except Exception as e:
-        return None, f"Connection error: {str(e)}"
+        error_msg = str(e)
+        if "401" in error_msg or "invalid_api_key" in error_msg.lower():
+            return None, "API key is invalid. Please check your AZURE_OPENAI_API_KEY in .env file."
+        elif "429" in error_msg:
+            return None, "Rate limit reached. Please wait a moment and try again."
+        elif "404" in error_msg or "DeploymentNotFound" in error_msg:
+            return None, "Deployment not found. Check AZURE_OPENAI_DEPLOYMENT_NAME in .env file."
+        else:
+            return None, f"AI service error: {error_msg}"
 
 
 @login_required
@@ -511,7 +504,7 @@ def ai_chat(request):
         "Do not use markdown formatting like ** or ## — use plain text only."
     )
 
-    text, error = _call_gemini(message, system)
+    text, error = _call_azure_openai(message, system)
     if error:
         return JsonResponse({"error": error})
 
@@ -558,7 +551,7 @@ Student's essay ({word_count} words, minimum required: {min_words}):
 
 Please evaluate this essay."""
 
-    text, error = _call_gemini(prompt, system)
+    text, error = _call_azure_openai(prompt, system)
     if error:
         return JsonResponse({"error": error})
 
