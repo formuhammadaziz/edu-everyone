@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load socialaccount %}
 {% block title %}Login - EduEveryone{% endblock %}
 
 {% block content %}
@@ -17,7 +16,7 @@
             </div>
             {% endif %}
 
-            <a href="{% provider_login_url 'google' %}" class="btn w-100 py-2 mb-3 d-flex align-items-center justify-content-center gap-2"
+            <a href="/accounts/google/login/?next=/dashboard/" class="btn w-100 py-2 mb-3 d-flex align-items-center justify-content-center gap-2"
                style="background:#fff;color:#3c4043;border:1px solid #dadce0;font-weight:500;font-size:0.95rem;border-radius:8px;">
                 <svg width="20" height="20" viewBox="0 0 48 48">
                     <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
